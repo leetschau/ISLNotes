@@ -1,0 +1,26 @@
+---
+title: "Chapter 2"
+output: html_notebook
+---
+
+*Applied* section in *2.4 Exercises*
+
+# Question 8
+
+## (a), (b): load the data from csv file, and remove *college name* column:
+```{r}
+rawdata <- read.table('data/College.csv', header = TRUE, sep = ',')
+head(rawdata)
+college <- rawdata
+rownames(college) <- college[,1]
+college <- college[,-1]
+head(college)
+```
+
+## (c)
+```{r}
+summary(college)
+pairs(college[,1:10])
+plot(college$Private, college$Outstate)
+```
+
