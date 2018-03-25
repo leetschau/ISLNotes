@@ -18,9 +18,111 @@ head(college)
 ```
 
 ## (c)
+i ~ iii:
 ```{r}
 summary(college)
+
 pairs(college[,1:10])
+
 plot(college$Private, college$Outstate)
 ```
+iv:
+```{r}
+college$Elite = "No"
+college$Elite[college$Top10perc > 50] = "Yes"
+college$Elite = as.factor(college$Elite)
+summary(college$Elite)  # there are 27 Elite colleges here
+plot(college$Elite, college$Outstate)
+```
+v:
+```{r}
+par(mfrow=c(2,2))
+hist(college$Apps)
+hist(college$perc.alumni, col = 2)
+hist(college$S.F.Ratio, breaks = 20, col = 3)
+hist(college$Expend, breaks = 100)
+```
 
+# Question 9
+Make sure the *ISLR* library is installed.
+Or install it with `install.packages("ISLR")`.
+```{r}
+library(ISLR)
+data("Auto")
+head(Auto)
+str(Auto)
+```
+(a):
+Quantitative predictors:
+mpg, cylinder, displacement, horsepower, weight, acceleration, year.
+
+Qualitative predictors: origin, name.
+
+```{r}
+# (b)
+sapply(Auto[,1:7], range)
+
+# (c)
+sapply(Auto[,1:7], mean)
+sapply(Auto[,1:7], sd)
+
+# (d)
+sbset <- Auto[-(10:85),]
+sapply(sbset[,1:7], range)
+sapply(sbset[,1:7], mean)
+sapply(sbset[,1:7], sd)
+```
+
+```{r}
+# (e)
+pairs(Auto)
+plot(Auto$weight, Auto$mpg)
+```
+The plot shows that with the increasing of the weight, the mpg is decrease.
+In other words, lighter cars are more energy effective.
+
+(f): Learn from the output graph of `pairs(Auto)` above.
+
+# Question 10
+```{r}
+# (a)
+library(MASS)
+?Boston
+
+# (b)
+pairs(Boston)
+
+# (c)
+plot(Boston$age, Boston$crim)
+```
+Older house with more crime.
+
+(d):
+```{r}
+library(dplyr)
+head(arrange(Boston, desc(crim)))
+```
+
+(e):
+```{r}
+nrow(Boston[Boston$chas > 0,])
+```
+
+(f):
+```{r}
+median(Boston$ptratio)
+```
+
+(g):
+```{r}
+subset(Boston, medv == min(Boston$medv))
+```
+
+(h):
+```{r}
+nrow(Boston[Boston$rm > 7,])
+summary(subset(Boston, rm > 8))
+summary(Boston)
+```
+
+Suburbs with more average number of rooms per dwelling have lower crime rate (comparing the mean and median), etc.
