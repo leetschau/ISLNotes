@@ -3,7 +3,7 @@ title: "Lab of Chapter 3"
 output: html_notebook
 ---
 
-# Section 3.6.2
+# 3.6.2 Simple Linear Regression
 ```{r}
 names(Boston)
 head(Boston)
@@ -15,7 +15,7 @@ coef(lm.fit)
 confint(lm.fit)
 ```
 
-Predict the **confidence intervals** and **prediction intervals** (see the notes for section 3.2) of *medv* (median value of owner-occupied homes) for a given value of  *lstat*:
+Predict the **confidence intervals** and **prediction intervals** (see the notes for section 3.2) of *medv* (median value of owner-occupied homes) on a given value of  *lstat*:
 ```{r}
 predict(lm.fit, data.frame(lstat=(c(5,10,15))), interval = 'confidence')
 predict(lm.fit, data.frame(lstat=(c(5,10,15))), interval = 'prediction')
@@ -32,15 +32,19 @@ par(mfrow=c(2,2))
 plot(lm.fit)
 ```
 
-Residual plots for *lstat* on *medv*:
+Residual plots of *medv* on *lstat*:
 ```{r}
 plot(predict(lm.fit), residuals(lm.fit))
 ```
-There is a pattern in above plot. See Figure 3.9 for reference, and *1. Non-linearity of the Data* in section 3.3.3 for details. For example:
+There is a pattern in above plot. See Figure 3.9 for reference, and *1. Non-linearity of the Data* in section 3.3.3 for explanations. For example:
 
 > The linear regression model assumes that there is a straight-line relationship between the predictors and the response.
 
 > Residual plots are a useful graphical tool for identifying non-linearity.
+
+PS: section 3.1 on p61
+
+> We will sometimes describe (3.1) by saying that we are regressing *Y* on *X* ...
 
 ------
 
@@ -61,3 +65,91 @@ which.max(hatvalues(lm.fit))
 ```
 
 So the 375th observatin has the largest leverage statistics.
+
+# 3.6.3 Multiple Linear Regression
+Regression *medv* on *lstat* and *age*:
+```{r}
+lm.fit <- lm(medv ~ lstat + age, data = Boston)
+summary(lm.fit)
+```
+
+Short-hand expression `.` for *all other variables* as predictors:
+```{r}
+all.fit <- lm(medv ~ ., data = Boston)
+summary(all.fit)
+```
+Test *colinearity* of the predictors with *VIF* (explained in *6. Colinearity* in section 3.3.3):
+```{r}
+library(car)
+vif(all.fit)
+```
+So the *rad* and *tax* has a high possibility of colinearity. See bottom of p101:
+
+> As a rule of thumb, a VIF value that exceeds 5 or 10 indicates a problematic amount of collinearity.
+
+------
+
+Perform a regression using all of the variables but *age*:
+```{r}
+fit.no.age <- lm(medv ~ . -age, data = Boston)
+summary(fit.no.age)
+```
+Or use `update()` function:
+```{r}
+fit.wo.age <- update(all.fit, ~ .-age)
+summary(fit.wo.age)
+```
+# 3.6.4 Interaction Terms
+
+See *Removing the Additive Assumption* in section 3.3.2 for detailed discussions.
+
+For adding interaction terms, `lstat * age` is a shorthand for `lstat + age + lstat:age`:
+```{r}
+fit.ls.age <- lm(medv ~ lstat * age, data = Boston)
+summary(fit.ls.age)
+```
+The *p-value* in result shows that *age* and *lstat:age* have little effect on *medv*.
+
+# 3.6.5 Non-linear Transformations of the Predictors
+Regression *medv* on *lstat* and $lstat^2$:
+```{r}
+fit.bi.ls <- lm(medv ~ lstat + I(lstat ^ 2), data = Boston)
+summary(fit.bi.ls)
+```
+*p-value* in result shows the $lstat^2$ has influence on *medv*.
+
+Then use ANOVA to test if *lstat* and *lstat* plus $lstat^2$ has difference for predicting *medv*:
+```{r}
+fit.ls <- lm(medv ~ lstat, data = Boston)
+anova(fit.ls, fit.bi.ls)
+```
+So $lstat^2$ has influence on *medv*.
+
+PS: ANOVA is the used when the predictors are qualitative and the response variable is quantitative. See chapter 8 in "统计学" by 贾俊平 for detailed discussions.
+
+Plot the regression:
+```{r}
+par(mfrow=c(2,2))
+plot(fit.bi.ls)
+```
+
+Regression for more higher order of predictors:
+```{r}
+fit.ls.5 <- lm(medv ~ poly(lstat, 5), data = Boston)
+summary(fit.ls.5)
+```
+
+# 3.6.6 Qualitative Predictors
+```{r}
+data("Carseats")
+names(Carseats)
+fit.carseats <- lm(Sales ~ . + Income:Advertising + Price:Age, data = Carseats)
+summary(fit.carseats)
+```
+
+Show the dummy variables created by R automatically:
+```{r}
+contrasts(Carseats$ShelveLoc)
+```
+The row name indicates the names of the dummy variables, here they are *ShelveLocGood* and *ShelveLocMedium*, which can be found in the output of the regression calculation above.
+The last paragraph of p118 gives a good explanations about how to read the output table and the regression result including qualitative predictors.

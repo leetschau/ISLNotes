@@ -13,6 +13,7 @@ Notes and exercise solutions:
 
 * [Chapter 2](http://23deda4d.wiz03.com/share/s/0zTJFd01gQ7-2X7QpT26_jGQ1zTGOZ3taAgU2gPZtV3wdjCj)
 
+* [Chapter 3](http://23deda4d.wiz03.com/share/s/0zTJFd01gQ7-2X7QpT26_jGQ3svyiX3R6k9m28TuU00SiG4R)
 
 
 
