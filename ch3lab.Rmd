@@ -1,0 +1,63 @@
+---
+title: "Lab of Chapter 3"
+output: html_notebook
+---
+
+# Section 3.6.2
+```{r}
+names(Boston)
+head(Boston)
+?Boston
+lm.fit <- lm(medv ~ lstat, data = Boston)
+summary(lm.fit)
+names(lm.fit)
+coef(lm.fit)
+confint(lm.fit)
+```
+
+Predict the **confidence intervals** and **prediction intervals** (see the notes for section 3.2) of *medv* (median value of owner-occupied homes) for a given value of  *lstat*:
+```{r}
+predict(lm.fit, data.frame(lstat=(c(5,10,15))), interval = 'confidence')
+predict(lm.fit, data.frame(lstat=(c(5,10,15))), interval = 'prediction')
+```
+It's clear that prediction intervals are much wider than confidence intervals.
+
+Plot the data points and regression line:
+```{r}
+plot(Boston$lstat, Boston$medv)
+abline(lm.fit, lwd=3, col='red')
+```
+```{r}
+par(mfrow=c(2,2))
+plot(lm.fit)
+```
+
+Residual plots for *lstat* on *medv*:
+```{r}
+plot(predict(lm.fit), residuals(lm.fit))
+```
+There is a pattern in above plot. See Figure 3.9 for reference, and *1. Non-linearity of the Data* in section 3.3.3 for details. For example:
+
+> The linear regression model assumes that there is a straight-line relationship between the predictors and the response.
+
+> Residual plots are a useful graphical tool for identifying non-linearity.
+
+------
+
+Outliers are discussed in *4. Outliers* in section 3.3.3 and Figure 3.12.
+
+> Observations whose studentized residuals are greater than 3 in absolute value are possible outliers.
+
+```{r}
+plot(predict(lm.fit), rstudent(lm.fit))
+```
+
+------
+
+Plot high leverage (discussed in *5. High Leverage Points* in section 3.3.3 and Figure 3.13) points:
+```{r}
+plot(hatvalues(lm.fit))
+which.max(hatvalues(lm.fit))
+```
+
+So the 375th observatin has the largest leverage statistics.
