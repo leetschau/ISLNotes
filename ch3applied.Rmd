@@ -3,7 +3,9 @@ title: "Exercise Applied in Chapter 3 of ISL"
 output: html_notebook
 ---
 
-8. (a).
+# Question 8
+
+## 8a
 ```{r}
 library(ISLR)
 data(Auto)
@@ -14,7 +16,7 @@ predict(fit, data.frame(horsepower = c(98)), interval = 'confidence')
 predict(fit, data.frame(horsepower = c(98)), interval = 'prediction')
 ```
 
-i. There is a relationship between *mpg* and *horsepower* in data frame *Auto*, because the *p-value* is less than 0.05.
+i. There is a relationship between *mpg* and *horsepower* in data frame *Auto*, because the *p-value* of the t-statistic is less than 0.05.
 
 ii. The $R^2$ statistic suggests *horsepower* explains 61% of *mpg*.
 
@@ -22,16 +24,16 @@ iii. Negative. For the coeffecient of *horsepower* is less than 0.
 
 iv. $mpg = 39.9 - 0.158 \times horsepower = 39.9 - 0.158 \times 98 = 24.4$
 
-v. The associated 95% confidence interval is $[23.97, 24.96]$, the prediction interval is $[14.81, 34.12]$.
+The associated 95% confidence interval is $[23.97, 24.96]$, the prediction interval is $[14.81, 34.12]$.
 
 
-(b).
+## 8b
 ```{r}
 plot(Auto$horsepower, Auto$mpg)
 abline(fit)
 ```
 
-(c).
+## 8c
 ```{r}
 plot(predict(fit), residuals(fit))
 plot(predict(fit), rstudent(fit))
@@ -40,13 +42,14 @@ plot(fit)
 ```
 The patterns in the *Residuals vs Fitted* graph shows there are some non-linearity in the relationship of *horsepower* and *mpg*.
 
-9. (a) and (b):
+# Question 9
+## 9a and 9b
 ```{r}
 plot(Auto) # equivalent to `pairs(Auto)`
 cor(within(Auto, rm(name)))
 ```
 
-(c).
+## 9c
 ```{r}
 mfit <- lm(mpg ~ . -name, data = Auto)
 summary(mfit)
@@ -58,7 +61,7 @@ ii. *weight*, *year* and *origin*.
 
 iii. Cars become more oil-efficient as the service life continue, the *mpg* increase about 0.75 per year.
 
-(d).
+## 9d
 ```{r}
 par(mfrow=c(2,2))
 plot(mfit)
@@ -70,7 +73,7 @@ The residual plot suggests no **large** outliers. The leverage plot suggests the
 
 In *rstudent* plot, we see there are about 4 outliers which `abs(x) > 3`, but not far from 3.
 
-(e).
+## 9e
 From the result of (c).ii, I choose the following 3 predictors:
 ```{r}
 imfit1 <- lm(mpg ~ weight * year * origin, data = Auto)
@@ -85,3 +88,54 @@ summary(imfit2)
 ```
 
 So the interaction between displacement and weight is significant, while that between cylinders and displacement is insignificant.
+
+# Question 10
+## 10a
+```{r}
+data("Carseats")
+fit <- lm(Sales ~ Price + Urban + US, data = Carseats)
+summary(fit)
+```
+## 10b
+Expensive car seats have less sales than cheaper ones. Whether the store is at urban or not doesn't effect the sales. The stores in the U.S. have more sales than that outside the U.S.
+
+## 10c
+$$sales = \begin{cases}
+13.04 - 0.05 \times price & \text{if US = 0}  \\
+13.04 - 0.05 \times price + 1.20 & \text{if US = 1}
+\end{cases}
+$$
+
+## 10d
+*Price* and *US*.
+
+## 10e
+```{r}
+sfit <- lm(Sales ~ Price + US, data = Carseats)
+summary(sfit)
+```
+
+## 10f
+Model (e) is a little better than (a) (0.2354 vs. 0.2335)
+
+## 10g
+```{r}
+confint(sfit)
+```
+Compared with 8(a).iv, compute the confidence/prediction intervals of **response variable** with 
+`predict(model, data.frame(predictor = c(v1, v2, ...)), interval = 'confidence/prediction')`. Compute confidence interval of **coefficients** with function `confint(model)`.
+
+## 10h
+```{r}
+plot(predict(sfit), rstudent(sfit))
+par(mfrow=c(2,2))
+plot(sfit)
+```
+So in the model (e), there is no outliers.
+
+For leverage check, $(p + 1) / n = 3 / 400 = 0.0075$
+So there is no points with high leverage (larger than 0.0075).
+
+Reference: The last paragraph in p98:
+
+> So if a given observation has a leverage statistic that greatly exceeds $(p+1)/n$, then we may suspect that the corresponding point has high leverage.
