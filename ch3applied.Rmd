@@ -1,0 +1,87 @@
+---
+title: "Exercise Applied in Chapter 3 of ISL"
+output: html_notebook
+---
+
+8. (a).
+```{r}
+library(ISLR)
+data(Auto)
+fit <- lm(mpg ~ horsepower, data = Auto)
+summary(fit)
+
+predict(fit, data.frame(horsepower = c(98)), interval = 'confidence')
+predict(fit, data.frame(horsepower = c(98)), interval = 'prediction')
+```
+
+i. There is a relationship between *mpg* and *horsepower* in data frame *Auto*, because the *p-value* is less than 0.05.
+
+ii. The $R^2$ statistic suggests *horsepower* explains 61% of *mpg*.
+
+iii. Negative. For the coeffecient of *horsepower* is less than 0.
+
+iv. $mpg = 39.9 - 0.158 \times horsepower = 39.9 - 0.158 \times 98 = 24.4$
+
+v. The associated 95% confidence interval is $[23.97, 24.96]$, the prediction interval is $[14.81, 34.12]$.
+
+
+(b).
+```{r}
+plot(Auto$horsepower, Auto$mpg)
+abline(fit)
+```
+
+(c).
+```{r}
+plot(predict(fit), residuals(fit))
+plot(predict(fit), rstudent(fit))
+par(mfrow=c(2,2))
+plot(fit)
+```
+The patterns in the *Residuals vs Fitted* graph shows there are some non-linearity in the relationship of *horsepower* and *mpg*.
+
+9. (a) and (b):
+```{r}
+plot(Auto) # equivalent to `pairs(Auto)`
+cor(within(Auto, rm(name)))
+```
+
+(c).
+```{r}
+mfit <- lm(mpg ~ . -name, data = Auto)
+summary(mfit)
+```
+
+i. Yes, there is.
+
+ii. *weight*, *year* and *origin*.
+
+iii. Cars become more oil-efficient as the service life continue, the *mpg* increase about 0.75 per year.
+
+(d).
+```{r}
+par(mfrow=c(2,2))
+plot(mfit)
+par(mfrow=c(1,1))
+plot(predict(mfit), rstudent(mfit))
+abline(3, 0)
+```
+The residual plot suggests no **large** outliers. The leverage plot suggests the no. 14 observation have unusually high leverage.
+
+In *rstudent* plot, we see there are about 4 outliers which `abs(x) > 3`, but not far from 3.
+
+(e).
+From the result of (c).ii, I choose the following 3 predictors:
+```{r}
+imfit1 <- lm(mpg ~ weight * year * origin, data = Auto)
+summary(imfit1)
+```
+The result shows all the interaction items have significant effect on *mpg*.
+
+From results of (b), we find the largest 2 correlations: cylinders vs. displacement (0.95), weight vs. displacement (0.93). So we test their interaction effects:
+```{r}
+imfit2 <- lm(mpg ~ cylinders * displacement + displacement * weight, data = Auto)
+summary(imfit2)
+```
+
+So the interaction between displacement and weight is significant, while that between cylinders and displacement is insignificant.
