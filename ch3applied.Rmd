@@ -139,3 +139,121 @@ So there is no points with high leverage (larger than 0.0075).
 Reference: The last paragraph in p98:
 
 > So if a given observation has a leverage statistic that greatly exceeds $(p+1)/n$, then we may suspect that the corresponding point has high leverage.
+
+# Question 11
+## 11a
+```{r}
+set.seed(1)
+x <- rnorm(100)
+y <- 2 * x + rnorm(100)
+fit <- lm(y ~ x + 0)
+summary(fit)
+```
+
+So the coefficient estimate $\hat \beta = 1.99$. Its standard error is 0.1065.
+The t-statistic is 18.73, and its p-value is less than $2^{-16}$.
+The regression result, 1.99, is very close to the theoretical value, which is 2.
+
+## 11b
+```{r}
+fitr <- lm(x ~ y + 0)
+summary(fitr)
+```
+
+The coefficient estimate $\hat \beta = 0.39$, its standard error is 0.02.
+The t-stats and its p-value is 18.73 and $\lt 2^{-16}$.
+The regression result, 0.39, is less than theoretical value $\frac12$.
+
+## 11c
+The coefficients in (a) and (b) should be reciprocal, because
+$$
+y = 2x + \epsilon \\
+\Rightarrow x = \frac{y - \epsilon}2 \\
+\Rightarrow x = \frac12 y - \frac{\epsilon}2 \\
+\therefore \hat\beta = \frac12
+$$
+## 11d
+
+$$\begin{aligned}
+SE(\hat\beta) &= \sqrt{\frac{\sum_{i=1}^n(y_i - x_i \hat\beta)^2}{(n-1)\sum_{i=1}^n x_i^2}} \\
+&= \sqrt{\frac{\sum_{i=1}^n y_i^2 - 2\hat\beta\sum_{i=1}^nx_iy_i + \hat\beta^2\sum_{i=1}^nx_i^2}{(n-1)\sum_{i=1}^n x_i^2}} \\
+\end{aligned}
+$$
+Take this into (3.14), we have:
+$$ \begin{aligned}
+t &= \frac{\hat\beta}{SE(\hat\beta)} \\
+&= \frac{\hat\beta\sqrt{(n-1)\sum_{i=1}^n x_i^2}}{\sqrt{\sum_{i=1}^n y_i^2 - 2\hat\beta\sum_{i=1}^nx_iy_i + \hat\beta^2\sum_{i=1}^nx_i^2}} \\
+&= \sqrt{\frac{(n-1)\sum_{i=1}^nx_i^2}{\frac{\sum_{i=1}^n y_i^2 - 2\hat\beta\sum_{i=1}^nx_iy_i + \hat\beta^2\sum_{i=1}^nx_i^2}{\hat\beta^2}}} \\
+&= \sqrt{\frac{(n-1)\sum_{i=1}^nx_i^2}{\frac{\sum_{i=1}^n y_i^2}{\hat\beta^2} - 2\frac1{\hat\beta}\sum_{i=1}^nx_iy_i + \sum_{i=1}^nx_i^2}} \\
+&= \sqrt{\frac{n-1}{\frac{\sum_{i=1}^ny_i^2}{\hat\beta^2 \sum_{i=1}^n x_i^2} -2\frac{\sum_{i=1}^n x_i y_i}{\hat\beta\sum_{i=1}^n x_i^2} + 1}}
+\end{aligned}
+$$
+
+Take (3.38) into above equation, we have:
+$$ \begin{aligned}
+t &= \sqrt{\frac{n-1}{\frac{\sum_{i=1}^nx_i^2 \sum_{i=1}^ny_i^2}{(\sum_{i=1}^n x_i y_i)^2} - 2 + 1}} \\
+
+&= \sqrt {
+  \frac{ (n-1)(\sum_{i=1}^n x_i y_i)^2}
+       { \sum_{i=1}^n x_i^2 \sum_{i=1}^n y_i^2 
+       - (\sum_{i=1}^n x_i y_i)^2}
+} \\
+
+&= \frac { \sqrt{n-1}
+           \sum_{i=1}^n x_i y_i
+         }
+         { \sqrt{ \sum_{i=1}^n x_i^2 \sum_{i=1}^n y_i^2 
+                  - (\sum_{i=1}^n x_i y_i)^2
+                }
+         }
+\end{aligned}
+$$
+
+Proof complete.
+
+$t$ calculated in R:
+```{r}
+sqrt(length(x) -1) * sum(x*y) / sqrt(sum(x^2)*sum(y^2) - (sum(x * y))^2)
+```
+
+18.72593 vs 18.73 in 11a.
+
+## 11e
+
+From the $t$ expression above, it's easy to find that $x$ and $y$ are symmetric,
+which means the result keeps the same when we swap $x$ and $y$.
+So the t-statistic for the regression of $y$ onto $x$ is the same as the t-statistic for the regression of $x$ onto $y$.
+
+## 11f
+
+```{r}
+summary(lm(y ~ x))
+summary(lm(x ~ y))
+```
+So the t-statistic are 18.556 and 18.56.
+
+# Question 12
+
+## 12a
+
+Based on (3.38), to keep the coefficient the same, we have:
+$$
+\frac{\sum_{i=1}^n x_i y_i}{\sum_{j=1}^n x_j^2} = \frac{\sum_{i=1}^n x_i y_i}{\sum_{j=1}^n y_j^2} \\
+\therefore \sum_{i=1}^n x_i^2 = \sum_{i=1}^n y_i^2
+$$
+So when sum of squares of observed $y$ is equals to sum of squares of observed $x$, the $\hat\beta$ is the same.
+
+## 12b
+The same with 11a.
+
+## 12c
+```{r}
+set.seed(1)
+x <- rnorm(100)
+y <- sample(x, 100)
+print(sum(x ^ 2) == sum(y ^ 2))
+summary(lm(y ~ x + 0))
+summary(lm(x ~ y + 0))
+```
+
+
