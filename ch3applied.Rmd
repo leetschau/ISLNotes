@@ -257,3 +257,84 @@ summary(lm(x ~ y + 0))
 ```
 
 
+# Question 13
+## 13a-c
+```{r}
+set.seed(1)
+x <- rnorm(100)
+eps <- rnorm(100, sd = 0.25)
+y <- -1 + 0.5 * x + eps
+length(y)
+```
+Length of the vecto $y$ is 100. $\beta_0 = -1$, $\beta_1 = 0.5$.
+
+## 13d
+```{r}
+plot(x, y)
+```
+With bare eyes we can see when $x=0$, $y \approx -1$, and $y \approx 0 \lvert x = 2$, which matches the line $y = -1 + 0.5 x$.
+
+## 13e
+```{r}
+f13e <- lm(y ~ x)
+summary(f13e)
+```
+So $\beta_0 = -1$ vs. $\hat\beta_0 = -1.009$, $\beta_1 = 0.5$ vs $\hat\beta_1 = 0.4997$.
+
+## 13f
+```{r}
+plot(x, y)
+abline(f13d, col = 'red', lty = 4)
+abline(-1, 0.5, col = 'blue', lty = 2)
+legend('bottomright', c('population regression', 'least square'), lty = c(4,2), col = c('red', 'blue'), bty = 'n')
+```
+See figure 3.3 for reference.
+
+## 13g
+
+```{r}
+f13g <- lm(y ~ poly(x, 2))
+summary(f13g)
+```
+$R^2$ statistic from 0.7762 to 0.7784 shows that the quadratic term has almost no improvements for the model fit.
+
+## 13h
+```{r}
+set.seed(1)
+x <- rnorm(100)
+eps <- rnorm(100, sd = 0.1)
+y <- -1 + 0.5 * x + eps
+f13h <- lm(y ~ x)
+summary(f13h)
+plot(x, y)
+abline(f13h, col = 'red', lty = 4)
+abline(-1, 0.5, col = 'blue', lty = 2)
+legend('bottomright', c('population regression', 'least square'), lty = c(4,2), col = c('red', 'blue'), bty = 'n')
+```
+
+The observations are more closed to the population regression line.
+$R^2$ statistic increases from 0.78 to 0.96.
+
+## 13i
+```{r}
+set.seed(1)
+x <- rnorm(100)
+eps <- rnorm(100, sd = 0.5)
+y <- -1 + 0.5 * x + eps
+f13i <- lm(y ~ x)
+summary(f13i)
+plot(x, y)
+abline(f13i, col = 'red', lty = 4)
+abline(-1, 0.5, col = 'blue', lty = 2)
+legend('bottomright', c('population regression', 'least square'), lty = c(4,2), col = c('red', 'blue'), bty = 'n')
+```
+The observations are more disperse from the population regression line.
+$R^2$ statistic decreases from 0.78 to 0.46.
+
+## 13j
+```{r}
+confint(f13e)
+confint(f13h)
+confint(f13i)
+```
+We can see that as the noises in the observations increase, the confidence intervals become much wider, but the mean value keep the same.
