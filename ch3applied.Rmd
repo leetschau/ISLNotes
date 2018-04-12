@@ -338,3 +338,87 @@ confint(f13h)
 confint(f13i)
 ```
 We can see that as the noises in the observations increase, the confidence intervals become much wider, but the mean value keep the same.
+
+# Question 14
+## 14a
+```{r}
+set.seed(1)
+x1 <- runif(100)
+x2 <- 0.5 * x1 + rnorm(100) / 10
+y <- 2 + 2 * x1 + 0.3 * x2 + rnorm(100)
+```
+The linear model is $y = 2 + 2x_1 + 0.3x_2 + \epsilon$.
+The coefficients are: $\beta_0 = 2$, $\beta_1 = 2$, $\beta_2 = 0.3$.
+
+## 14b
+```{r}
+cor(x1, x2)
+plot(x1, x2)
+```
+
+## 14c
+```{r}
+f14c <- lm(y ~ x1 + x2)
+summary(f14c)
+```
+$\hat\beta_0 = 2.13$, $\hat\beta_1 = 1.44$, $\hat\beta_2 = 1.01$.
+$\hat\beta_1$ and $\hat\beta_2$ are both far from the true coefficients (2 and 0.3, respectively).
+
+From the p-values of the t-statistic(0.0487 and 0.3754), we can't reject the null hypothesis of $\beta_1 = 0$ and $\beta_2 = 0$ (for 0.0487 is so close to 0.05).
+
+## 14d
+```{r}
+f14d <- lm(y ~ x1)
+summary(f14d)
+```
+Accroding to the p-value of t-statistic, we can reject the $H_0$ hypothesis.
+
+## 14e
+```{r}
+f14e <- lm(y ~ x2)
+summary(f14e)
+```
+Accroding to the p-value of t-statistic, we can reject the $H_0$ hypothesis.
+
+## 14f
+No. The results don't contradict each other.
+Because when the independent variables are correlated to each other,
+they can't be fitted with linear regression model.
+
+## 14g
+```{r}
+x1n <- c(x1, 0.1)
+x2n <- c(x2, 0.8)
+yn <- c(y, 6)
+f14g <- lm(yn ~ x1n + x2n)
+summary(f14g)
+par(mfrow=c(2,2))
+plot(f14g)
+par(mfrow=c(1,1))
+plot(predict(f14g), rstudent(f14g))
+```
+This observation disturbs the relationship between $y$ and $x1$, $x2$ severely.
+The coefficients become more far from the true values.
+From these plots we can see, it is both outlier and with high-leverage.
+
+```{r}
+f14g2 <- lm(yn ~ x1n)
+summary(f14g2)
+par(mfrow=c(2,2))
+plot(f14g2)
+par(mfrow=c(1,1))
+plot(predict(f14g2), rstudent(f14g2))
+```
+The $x1n$ has no statistical relation with $y$ because of the 101th observation.
+From these plots we can see, this observation is both outlier and with high-leverage.
+
+```{r}
+f14g3 <- lm(yn ~ x2n)
+summary(f14g3)
+par(mfrow=c(2,2))
+plot(f14g3)
+par(mfrow=c(1,1))
+plot(predict(f14g3), rstudent(f14g3))
+```
+The $x2n$ still has statistical relation with the $y$. But the $R^2$ is very low.
+From these plots we can see, this observation is both outlier and with high-leverage.
