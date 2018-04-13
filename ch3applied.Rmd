@@ -422,3 +422,89 @@ plot(predict(f14g3), rstudent(f14g3))
 ```
 The $x2n$ still has statistical relation with the $y$. But the $R^2$ is very low.
 From these plots we can see, this observation is both outlier and with high-leverage.
+
+# Question 15
+## 15a
+```{r}
+library(MASS)
+names(Boston)
+f15a1 <- lm(crim ~ zn, data = Boston)
+f15a2 <- lm(crim ~ indus, data = Boston)
+f15a3 <- lm(crim ~ chas, data = Boston)
+f15a4 <- lm(crim ~ nox, data = Boston)
+f15a5 <- lm(crim ~ rm, data = Boston)
+f15a6 <- lm(crim ~ age, data = Boston)
+f15a7 <- lm(crim ~ dis, data = Boston)
+f15a8 <- lm(crim ~ rad, data = Boston)
+f15a9 <- lm(crim ~ tax, data = Boston)
+f15a10 <- lm(crim ~ ptratio, data = Boston)
+f15a11 <- lm(crim ~ black, data = Boston)
+f15a12 <- lm(crim ~ lstat, data = Boston)
+f15a13 <- lm(crim ~ medv, data = Boston)
+summary(f15a1)
+summary(f15a2)
+summary(f15a3)
+summary(f15a4)
+summary(f15a5)
+summary(f15a6)
+summary(f15a7)
+summary(f15a8)
+summary(f15a9)
+summary(f15a10)
+summary(f15a11)
+summary(f15a12)
+summary(f15a13)
+par(mfrow=c(2,2))
+plot(f15a1)
+```
+All predictors except *chas* has statistically significant associations with *crim*.
+
+## 15b
+```{r}
+f15b <- lm(crim ~ ., data = Boston)
+summary(f15b)
+```
+For the predictors *zn*, *dis*, *rad*, *medv* and *black* we can reject the null hypothesis.
+
+## 15c
+```{r}
+sim.coef <- c(coef(f15a1)[2], coef(f15a2)[2], coef(f15a3)[2], coef(f15a4)[2], coef(f15a5)[2], coef(f15a6)[2], coef(f15a7)[2], coef(f15a8)[2], coef(f15a9)[2], coef(f15a10)[2], coef(f15a11)[2], coef(f15a12)[2], coef(f15a13)[2])
+mul.coef <- coef(f15b)[-1]
+plot(sim.coef, mul.coef)
+```
+The predictor *nox* has positive influence no *crim* in simple linear regression and negative influence in multiple linear regression. But the p-value of the t-stats of *nox* is 0.051152, which suggests *nox* has no siginificant influence on *crim*.
+
+## 15d
+```{r}
+f15d1 <- lm(crim ~ poly(zn, 3), data = Boston)
+f15d2 <- lm(crim ~ poly(indus, 3), data = Boston)
+# f15d3 <- lm(crim ~ poly(chas, 3), data = Boston)
+f15d4 <- lm(crim ~ poly(nox, 3), data = Boston)
+f15d5 <- lm(crim ~ poly(rm, 3), data = Boston)
+f15d6 <- lm(crim ~ poly(age, 3), data = Boston)
+f15d7 <- lm(crim ~ poly(dis, 3), data = Boston)
+f15d8 <- lm(crim ~ poly(rad, 3), data = Boston)
+f15d9 <- lm(crim ~ poly(tax, 3), data = Boston)
+f15d10 <- lm(crim ~ poly(ptratio, 3), data = Boston)
+f15d11 <- lm(crim ~ poly(black, 3), data = Boston)
+f15d12 <- lm(crim ~ poly(lstat, 3), data = Boston)
+f15d13 <- lm(crim ~ poly(medv, 3), data = Boston)
+summary(f15d1)
+summary(f15d2)
+# summary(f15d3)
+summary(f15d4)
+summary(f15d5)
+summary(f15d6)
+summary(f15d7)
+summary(f15d8)
+summary(f15d9)
+summary(f15d10)
+summary(f15d11)
+summary(f15d12)
+summary(f15d13)
+```
+
+So the *black* predictor has no non-linear relationship with *crim*.
+*lstat* has a subtle non-linear relatonship with *crim*.
+*chas* has no linear relationship with *crim* (see 15a), hence no non-linear relationship, too.
+Other predictors have different levels but significant non-linear relationship with *crim*.
