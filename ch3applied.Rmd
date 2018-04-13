@@ -472,7 +472,8 @@ sim.coef <- c(coef(f15a1)[2], coef(f15a2)[2], coef(f15a3)[2], coef(f15a4)[2], co
 mul.coef <- coef(f15b)[-1]
 plot(sim.coef, mul.coef)
 ```
-The predictor *nox* has positive influence no *crim* in simple linear regression and negative influence in multiple linear regression. But the p-value of the t-stats of *nox* is 0.051152, which suggests *nox* has no siginificant influence on *crim*.
+The predictor *nox* has positive influence no *crim* in simple linear regression and negative influence in multiple linear regression. The former says when calculating the average value of  crime rates according to nitrogen oxides, the *crim* increate as the *nox* increase. The latter says when other predictors fixed, the crime rates decrease as the nitrogen oxides increase.
+Section 4.3.4 on page 135 provides detailed explanations about a similar problem.
 
 ## 15d
 ```{r}
