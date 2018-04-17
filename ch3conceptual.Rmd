@@ -1,0 +1,155 @@
+---
+title: "Conceptual Exercises of Chapter 3"
+output: html_notebook
+---
+# Question 1
+The null hypotheses of Table 3.4 is: the advertising costs of TV, radio and newspaper have no significant influnce of sales.
+
+# Question 2
+For KNN classifier, the response variable is qualitative, while for KNN regression method, the response variable is quantitative, the formula is described in p105:
+$$ \hat f(x_0) = \frac 1 K \sum_{x_i\in \mathcal N_0} y_i$$
+where $\mathcal N_0$ is the set of the K nearest points of $x_0$.
+
+# Question 3
+## 3a
+The answer *iii* is right. Take $\beta_i$ into the regression equation, we get:
+$$
+\because \text{$x_1$ and $x_2$ is constant} \\
+\begin{align}
+y & = 50 + 20x_1 + 0.07x_2 + 35x_3 + 0.01x_1 x_2 -10x_1 x_3 \\
+  & = C + (35 - 10x_1) x_3
+\end{align} \\
+\therefore \begin{cases}
+y \mid_{x_3=1} \lt y \mid_{x_3=0}, & \text{if $x_1 \gt 3.5$} \\
+y \mid_{x_3=1} \gt y \mid_{x_3=0}, & \text{if $x_1 \lt 3.5$}
+\end{cases}
+$$
+So when GPA is above 3.5, males ($x_3 = 0$) earn higher than females ($x_3 =1$).
+
+## 3b
+Take $x_1 = 4.0, x_2 = 110,  x_3 = 1$ into equation (1), we get: $y = 137.1$
+
+## 3c
+False. The coefficient has nothing to do with the interaction effect. The *p-value* of the interaction term determines its significance.
+
+# Question 4
+## 4a
+The training RSS of cubic regression is lower than that of linear regression, because it could make a tighter fit against data that matched with a wider irreducible error ($Var(\epsilon)$).
+
+## 4b
+The test RSS of cubic regression is larger than that of linear regression, because the overfitting of the training set makes the prediction accuracy declines.
+
+## 4c
+The same reason with (a).
+
+## 4d
+There's not enough information to tell. It depends on how non-linear between $X$ and $Y$.
+
+# Question 5
+Let $$ \sum_{j=1}^n x_j^2 = C$$
+So we have $$
+\begin{align}
+\hat y_i & = \hat\beta x_i = \sum_{k=1}^n a_k y_k \\
+& = \sum_{k=1}^n \frac{x_i}C x_k y_k \\
+\therefore a_k & = \frac{x_i x_k}C \\
+& = \frac{x_i x_k}{\sum_{j=1}^n x^2_j}
+\end{align}
+$$
+Here $k = i'$, and $a_k$ is the function of $i$, which means $a_k$ changes according to $i$.
+
+# Question 6
+Given equation (3.2) and (3.4), we know the linear regression line equation is $y = \bar y - \hat \beta_1 \bar x + \hat \beta_1 x$.
+So when $x = \bar x$, $y = \bar y$, which means point $(\bar x, \bar y)$ is on he line.
+
+# Question 7
+
+For *n* observations $(x_i, y_i), i=1..n$, let:
+
+$$\begin{equation}\begin{aligned}
+ss_{xx} &\equiv \sum_{i=1}^n (x_i - \bar x)^2 \\
+&= \sum_{i=1}^n x_i^2 - 2 \bar x \sum_{i=1}^n x_i + \sum_{i=1}^n \bar x^2 \\
+&= \sum_{i=1}^n x_i^2 - 2n\bar x^2 + n \bar x^2 \\
+&= \sum_{i=1}^n x_i^2 - n\bar x^2
+\end{aligned}\end{equation} \tag{1}\label{eq1}
+$$
+Substitute $x$ with $y$, we get:
+$$
+ss_{yy} \equiv \sum_{i=1}^n (y_i - \bar y)^2 = \sum_{i=1}^n y_i^2 - n\bar y^2 \tag{2}\label{eq2}
+$$
+And:
+$$\begin{equation}\begin{aligned}
+ss_{xy} &\equiv \sum_{i=1}^n (x_i - \bar x) (y_i - \bar y) \\
+&= \sum_{i=1}^n (x_i y_i - \bar x y_i - x_i \bar y + \bar x \bar y) \\
+&= \sum_{i=1}^n x_i y_i - n \bar x \bar y - n \bar x \bar y + n \bar x \bar y \\
+&= \sum_{i=1}^n x_i y_i - n\bar x\bar y
+\end{aligned}\end{equation} \tag{3}\label{eq3}
+$$
+For correlation between $X$ and $Y$, also denoted as $Cor(X, Y)$:
+$$
+r \equiv \frac{\sum_{i=1}^n(x_i - \bar x)(y_i - \bar y)}
+{\sqrt{\sum_{i=1}^n(x_i - \bar x)^2} \sqrt{\sum_{i=1}^n(y_i - \bar y)^2}}
+= \frac{ss_{xy}}{\sqrt{ss_{xx}ss_{yy}}} \tag{4} \label{eq4}
+$$
+Here $\bar x = \frac{\sum_{i=1}^n x_i}n, \bar y = \frac{\sum_{i=1}^n y_i}n$.
+See [Correlation Coefficient][corcoef] and [Least Squares Fitting][lsf] for detailed reasonings.
+
+For the target regression function $y = a + bx$, $a$ and $b$ should be the value that make $RSS$ get its minimum, where
+$$
+RSS \equiv \sum_{i=1}^n(y_i - \hat y_i)^2
+= \sum_{i=1}^n [y_i - (a + b x_i)]^2 \tag{5}\label{eq5}
+$$
+So we have:
+$$
+\frac{\partial (RSS)}{\partial a} = -2 \sum_{i=1}^n [y_i - (a + b x_i)] = 0 \\
+\frac{\partial (RSS)}{\partial b} = -2 \sum_{i=1}^n [y_i - (a + b x_i)] x_i = 0
+$$
+These lead to:
+$$\begin{align}
+na + b\sum_{i=1}^n x_i = \sum_{i=1}^n y_i \tag{6} \label{eq6}\\
+a \sum_{i=1}^n x_i + b \sum_{i=1}^n x_i^2 = \sum_{i=1}^n x_i y_i \tag{7}\label{eq7}
+\end{align}$$
+
+Eq$\eqref{eq7}$ can be written as:
+$$
+an \bar x + b \sum_{i=1}^n x_i^2 = \sum_{i=1}^n x_i y_i \tag{8}\label{eq8}
+$$
+From eq$\eqref{eq6}$ we have:
+$$a = \bar y - b \bar x \tag{9}\label{eq9}$$
+Take eq$\eqref{eq1}, \eqref{eq3}, \eqref{eq9}$ into eq$\eqref{eq8}$, we get:
+$$
+(\bar y - b \bar x) n \bar x + b \sum_{i=1}^n x_i^2 = \sum_{i=1}^n x_i y_i \\
+n \bar x \bar y - bn \bar x^2 + b \sum_{i=1}^n x_i^2 = \sum_{i=1}^n x_i y_i \\
+(\sum_{i=1}^n x_i^2 - n \bar x^2) b = \sum_{i=1}^n x_i y_i - n \bar x \bar y \\
+\therefore b = \frac{\sum_{i=1}^n x_i y_i - n \bar x \bar y}{\sum_{i=1}^n x_i^2 - n \bar x^2}
+= \frac{ss_{xy}}{ss_{xx}} \tag{10}\label{eq10}
+$$
+Take eq$\eqref{eq9}, \eqref{eq10}$ into eq$\eqref{eq5}$, we get:
+$$\begin{equation}\begin{aligned}
+RSS &= \sum_{i=1}^n [y_i - (a + b x_i)]^2 \\
+&= \sum_{i=1}^n (y_i - \bar y + b \bar x - b x_i)^2 \\
+&= \sum_{i=1}^n [(y_i - \bar y) - b (x_i - \bar x)]^2 \\
+&= \sum_{i=1}^n (y_i - \bar y)^2 + b^2 \sum_{i=1}^n (x_i - \bar x)^2 -2b \sum_{i=1}^n (x_i - \bar x) (y_i - \bar y) \\
+&= ss_{yy} + b^2 ss_{xx} -2bss_{xy} \\
+&= ss_{yy} + \frac{ss_{xy}^2}{xx_{xx}^2}ss_{xx} -2 \frac{ss_{xy}}{ss_{xx}}ss_{xy} \\
+&= ss_{yy} - \frac{ss_{xy}^2}{ss_{xx}}
+\end{aligned}\end{equation} \tag{11}\label{eq11}
+$$
+
+Take eq$\eqref{eq11}$ into equation (3.17) on page 70, we have:
+$$
+R^2 = \frac{TSS - RSS}{TSS}
+= \frac{ss_{yy} - ss_{yy} + \frac{ss_{xy}^2}{ss_{xx}}}{ss_{yy}}
+= \frac{ss_{xy}^2}{ss_{xx} ss_{yy}}
+$$
+With eq$\eqref{eq4}$, we get $R^2 = Cor(X, Y)^2$.
+
+Here $RSS$, $R^2$, $TSS$ and $Cor(X, Y)$ is defined in Equation (3.16) ~ (3.18).
+$ss$, $r$ is defined in [Correlation Coefficient][corcoef] and [Least Squares Fitting][lsf].
+
+[corcoef]: http://mathworld.wolfram.com/CorrelationCoefficient.html
+[lsf]: http://mathworld.wolfram.com/LeastSquaresFitting.html
+
+
+Other references:
+
+* [Relationship between R2 and correlation coefficient](https://stats.stackexchange.com/questions/83347/relationship-between-r2-and-correlation-coefficient)
