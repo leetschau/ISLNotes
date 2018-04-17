@@ -1,0 +1,39 @@
+---
+title: "Conceptual Exercises of Chapter 2"
+output: html_notebook
+---
+
+# Question 1
+
+(a) better: more data points make flexible method more accurate;
+
+(b) worse: flexible method tend to be overfit on less data points;
+
+(c) better: flexible method is more suitable in non-linear situations;
+
+(d) worse: high variance of error terms make flexible method overfit;
+
+# Question 2
+
+(a) Regression, inference, n=500, p=3;
+
+(b) Classification, prediction, n=20, p=13;
+
+(c) Regression, prediction, n=52 (how many weeks in 2012), p=3;
+
+# Question 3
+(a) See fig 2.9 for pattern of training MSE and test MSE when flexibility increase. See fig. 2.12 for pattern of variance, bias and test MSE when flexibility increase.
+
+# Question 5
+For prediction, use flexible method, with enough observations to avoid overfit.
+
+For inference, use a less flexible approach, while the bias may be high.
+
+# Question 7
+(a) $3, 2, \sqrt{10}, \sqrt5, \sqrt2, \sqrt3$
+
+(b) Green, for the minimum of results in *(a)* above is $\sqrt2$
+
+(c) Red, for there are 2 *Red* (for Euclidean distance = 2 and $\sqrt3$) and 1 *Green* (for it = $\sqrt2$)
+
+(d) Small, because small K is more suitable for non-linear problems.
