@@ -473,7 +473,8 @@ mul.coef <- coef(f15b)[-1]
 plot(sim.coef, mul.coef)
 ```
 The predictor *nox* has positive influence no *crim* in simple linear regression and negative influence in multiple linear regression. The former says when calculating the average value of  crime rates according to nitrogen oxides, the *crim* increate as the *nox* increase. The latter says when other predictors fixed, the crime rates decrease as the nitrogen oxides increase.
-Section 4.3.4 on page 135 provides detailed explanations about a similar problem.
+Section 4.3.4 on page 135 provides detailed explanations about a similar problem:
+> In general, the phenomenon seen in Figure 4.3 is known as **confounding**.
 
 ## 15d
 ```{r}

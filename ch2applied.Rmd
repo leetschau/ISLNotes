@@ -7,7 +7,8 @@ output: html_notebook
 
 # Question 8
 
-## (a), (b): load the data from csv file, and remove *college name* column:
+## 8a, 8b
+Lload the data from csv file, and remove *college name* column:
 ```{r}
 rawdata <- read.table('data/College.csv', header = TRUE, sep = ',')
 head(rawdata)
@@ -17,7 +18,7 @@ college <- college[,-1]
 head(college)
 ```
 
-## (c)
+## 8c
 i ~ iii:
 ```{r}
 summary(college)
@@ -52,12 +53,13 @@ data("Auto")
 head(Auto)
 str(Auto)
 ```
-(a):
+## 9a
 Quantitative predictors:
 mpg, cylinder, displacement, horsepower, weight, acceleration, year.
 
 Qualitative predictors: origin, name.
 
+## 9b ~ 9d
 ```{r}
 # (b)
 sapply(Auto[,1:7], range)
@@ -72,18 +74,19 @@ sapply(sbset[,1:7], range)
 sapply(sbset[,1:7], mean)
 sapply(sbset[,1:7], sd)
 ```
-
+## 9e
 ```{r}
-# (e)
 pairs(Auto)
 plot(Auto$weight, Auto$mpg)
 ```
 The plot shows that with the increasing of the weight, the mpg is decrease.
 In other words, lighter cars are more energy effective.
 
-(f): Learn from the output graph of `pairs(Auto)` above.
+## 9f
+Learn from the output graph of `pairs(Auto)` above.
 
 # Question 10
+## 10a ~ 10c
 ```{r}
 # (a)
 library(MASS)
@@ -97,28 +100,28 @@ plot(Boston$age, Boston$crim)
 ```
 Older house with more crime.
 
-(d):
+## 10d
 ```{r}
 library(dplyr)
 head(arrange(Boston, desc(crim)))
 ```
 
-(e):
+## 10e
 ```{r}
 nrow(Boston[Boston$chas > 0,])
 ```
 
-(f):
+## 10f
 ```{r}
 median(Boston$ptratio)
 ```
 
-(g):
+## 10g
 ```{r}
 subset(Boston, medv == min(Boston$medv))
 ```
 
-(h):
+## 10h
 ```{r}
 nrow(Boston[Boston$rm > 7,])
 summary(subset(Boston, rm > 8))
