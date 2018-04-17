@@ -1,0 +1,22 @@
+---
+title: "Conceptual Exercises of Chapter 4"
+output: html_notebook
+---
+
+# Question 2
+
+When proving the same $k$ produce both maximum $p_k(x)$ and maximum of $\delta_k(x)$,
+we have assumed that $\sigma_1^2=\dots=\sigma_K^2$, the only variable is $k$ in equation (4.12) and (4.13). So let
+$$
+\frac { \frac {1} {\sqrt{2 \pi} \sigma} \exp(- \frac {1} {2 \sigma^2} x^2) } {\sum_{l=1}^K { \pi_l \frac {1} {\sqrt{2 \pi} \sigma} \exp(- \frac {1} {2 \sigma^2} (x - \mu_l)^2) }} = C
+$$
+Take it into equation (4.12) and (4.13), we have:
+$$
+p_k(x) = \exp (x \frac {\mu_k} {\sigma^2} - \frac {\mu_k^2} {2 \sigma^2}) \pi_k C \\
+\therefore
+log(p_k(x))
+= x\frac{\mu_k}{\sigma^2} - \frac{\mu_k^2}{2\sigma^2} + log(\pi_k) + log(C)
+= \delta_k(x) + log(C)
+$$
+For logarithm function is monotonically increasing, when $\delta_k(x)$ get its maximum,
+$p_k(x)$ get its maximum, too.
