@@ -1,0 +1,82 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# 4.6.1 The Stock Market Data
+```{r}
+library(ISLR)
+head(Smarket)
+cor(Smarket[,-9])
+plot(Smarket$Volume)
+```
+
+# 4.6.2 Logistic Regression
+
+```{r}
+f2 <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, data=Smarket, family=binomial)
+summary(f2)
+coef(f2)
+summary(f2)$coef
+summary(f2)$coef[,4]
+```
+
+Predict response based on predictors:
+```{r}
+gprob <- predict(f2, type = 'response')
+gprob[1:10]
+contrasts(Smarket$Direction)
+```
+
+Generate confusion matrix:
+```{r}
+gpred <- rep('Down', 1250)
+gpred[gprob > 0.5] <- 'Up'
+table(gpred, Smarket$Direction)
+```
+
+Calculate the training error rate on all training set:
+```{r}
+(145 + 507) / 1250
+mean(gpred == Smarket$Direction)
+```
+
+Split existing training set to training and test subset:
+```{r}
+train <- (Smarket$Year < 2005)
+sm2005 <- Smarket[!train,]
+dim(sm2005)
+direction2005 <- sm2005$Direction
+```
+
+Build a logistic regression model on training set:
+```{r}
+f2.2 <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, 
+            data=Smarket, family=binomial, subset = train)
+```
+
+With above model, predict response on test set, and calculating test error rate:
+```{r}
+gprob2005 <- predict(f2.2, sm2005, type = 'response')
+gpred2005 <- rep('Down', 252)
+gpred2005[gprob2005 > 0.5] <- 'Up'
+table(gpred2005, direction2005)
+# mean(gpred2005 == direction2005)
+mean(gpred2005 != direction2005)
+```
+
+Predict again with removing irrelevant predictors:
+```{r}
+f2.p2 <- glm(Direction ~ Lag1 + Lag2, data=Smarket, family = binomial, subset=train)
+gprob2005.p2 <- predict(f2.p2, sm2005, type="response")
+gpred2005.p2 <- rep("Down", 252)
+gpred2005.p2[gprob2005.p2 > 0.5] <- "Up"
+table(gpred2005.p2, direction2005)
+mean(gpred2005.p2 == direction2005)
+```
+
+Predict the returns associated with particular values of *Lag1* and *Lag2*:
+```{r}
+predict(f2.p2, newdata = data.frame(Lag1 = c(1.2, 1.5), Lag2 = c(1.1, -0.8)), type = 'response')
+```
+
