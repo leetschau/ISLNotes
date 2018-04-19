@@ -32,3 +32,21 @@ $$
 
 For logarithm function is monotonically increasing, when $\delta_k(x)$ get its maximum,
 $p_k(x)$ get its maximum, too.
+
+# Question 3
+
+Like above question, but without assumption that $\sigma_1^2 = \dots = \sigma_K^2$,
+let:
+$$
+\frac {\frac {1} {\sqrt{2 \pi}}} {\sum_{l=1}^K { \pi_l \frac {1} {\sqrt{2 \pi} \sigma} \exp(- \frac {1} {2 \sigma^2} (x - \mu_l)^2) }} = C
+$$
+
+Take it into equation (4.12) and (4.13), we have:
+$$
+p_k(x) = \exp(-\frac{(x - \mu_k)^2}{2 \sigma_k^2}) \frac{\pi_k}{\sigma_k} C \\
+\therefore
+log(p_k(x)) = \delta_k(x)
+= -\frac{(x - \mu_k)^2}{2 \sigma_k^2} + log(\frac{\pi_k}{\sigma_k}) + log(C)
+$$
+
+So you can see $\delta_k(x)$ is a quadratic function of $x$.

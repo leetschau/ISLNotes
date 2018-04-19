@@ -80,3 +80,42 @@ Predict the returns associated with particular values of *Lag1* and *Lag2*:
 predict(f2.p2, newdata = data.frame(Lag1 = c(1.2, 1.5), Lag2 = c(1.1, -0.8)), type = 'response')
 ```
 
+# 4.6.3 Linear Discriminant Analysis
+```{r}
+library(MASS)
+ldaf <- lda(Direction ~ Lag1 + Lag2, data = Smarket, subset = train)
+ldaf
+plot(ldaf)
+```
+
+How to read this plot?
+The y-axis is the probability of *Down* and *Up*.
+What does the x-axis stand for?
+
+```{r}
+lda.pred <- predict(ldaf, sm2005)
+names(lda.pred)
+lda.class <- lda.pred$class
+table(lda.class, direction2005)
+mean(lda.class == direction2005)
+sum(lda.pred$posterior[,1] > 0.5)
+sum(lda.pred$posterior[,1] < 0.5)
+lda.pred$posterior[1:20,1]
+lda.class[1:20]
+sum(lda.pred$posterior[,1] > 0.9)
+```
+
+# 4.6.4 Quadratic Discriminant Analysis
+
+```{r}
+qdaf <- qda(Direction ~ Lag1 + Lag2, data = Smarket, subset = train)
+qdaf
+qda.class <- predict(qdaf, sm2005)$class
+table(qda.class, direction2005)
+mean(qda.class == direction2005)
+```
+
+Compared with linear discriminant analysis, the accurate rate increased from 0.56 to 0.59.
+
+# 4.6.5 K-Nearest Neighbours
+
