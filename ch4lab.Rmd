@@ -119,3 +119,77 @@ Compared with linear discriminant analysis, the accurate rate increased from 0.5
 
 # 4.6.5 K-Nearest Neighbours
 
+Predict stock market direction wth $k=1$:
+```{r}
+library(class)
+train.X <- cbind(Smarket$Lag1, Smarket$Lag2)[train,]
+test.X <- cbind(Smarket$Lag1, Smarket$Lag2)[!train,]
+train.direction <- Smarket$Direction[train]
+set.seed(1)
+knn.pred <- knn(train.X, test.X, train.direction, k = 1)
+table(knn.pred, direction2005)
+mean(knn.pred == direction2005)
+```
+
+Predict stock market direction wth $k=3$:
+```{r}
+library(class)
+knn.pred3 <- knn(train.X, test.X, train.direction, k = 3)
+table(knn.pred3, direction2005)
+mean(knn.pred3 == direction2005)
+```
+
+# 4.6.6 An Application to Caravan Insurance Data
+
+Load dataset *Caravan* and standardized it:
+```{r}
+head(Caravan)
+str(Caravan)
+std.X <- scale(Caravan[, -86])
+var(Caravan[,1])
+var(std.X[,1])
+```
+
+Split train and test data:
+```{r}
+test <- 1:1000
+train.X <- std.X[-test,]
+test.X <- std.X[test,]
+train.Y <- Caravan$Purchase[-test]
+test.Y <- Caravan$Purchase[test]
+set.seed(1)
+knn.pred <- knn(train.X, test.X, train.Y, k=1)
+mean(knn.pred != test.Y)
+mean(test.Y != 'No')
+table(knn.pred, test.Y)
+```
+
+$9 \div (68+9) \approx 0.117$, which is success rate based on KNN prediction, is double the rate from random guessing (0.059).
+
+Predict with $k=3$ and 5:
+```{r}
+knn.pred3 <- knn(train.X, test.X, train.Y, k=3)
+table(knn.pred3, test.Y)
+knn.pred5 <- knn(train.X, test.X, train.Y, k=5)
+table(knn.pred5, test.Y)
+```
+
+$5 \div (21 + 5) \approx 0.192$, and $4 \div (11 + 4) \approx 0.267$, are much higher than the result of $k=1$.
+
+Logistic regression predict with cut-off 0.5:
+```{r}
+lr.fit <- glm(Purchase ~ ., data = Caravan, family = 'binomial', subset = -test)
+purchase.prob <- predict(lr.fit, Caravan[test,], type = 'response')
+purchase.res <- rep('No', 1000)
+purchase.res[purchase.prob > 0.5] = 'Yes'
+table(purchase.res, test.Y)
+```
+
+All 7 "purchased" prediction are all wrong!
+Change threshold to 0.25:
+```{r}
+purchase.res[purchase.prob > 0.25] = 'Yes'
+table(purchase.res, test.Y)
+```
+
+The success rate is $11 \div (22 + 11) \approx 0.333$.
