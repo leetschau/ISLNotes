@@ -49,4 +49,26 @@ log(p_k(x)) = \delta_k(x)
 = -\frac{(x - \mu_k)^2}{2 \sigma_k^2} + log(\frac{\pi_k}{\sigma_k}) + log(C)
 $$
 
-So you can see $\delta_k(x)$ is a quadratic function of $x$.
+So $\delta_k(x)$ is a quadratic function of $x$.
+
+# Question 4
+
+## 4a ~ 4d
+0.1 (10% in other words), 0.01, and $10^{-100}$.
+As the increase of $p$, the near points decrease exponentially.
+
+## 4e
+The length of each side for $p$ dimensional hypercube is $0.1^{\frac1p}$.
+
+# Question 5
+
+5a: When the Bayes decision boundary is linear, QDA performs better than QDA on training set.
+LDA performs better than QDA on test set.
+
+5b: When the Bayes boundary is non-linear, QDA performs better than LDA on both training and test sets.
+
+5c: When $n$ increase, QDA predicts more accurately than LDA, because the bias of QDA decrease faster than LDA.
+See the first paragraph of page 150 for reference.
+
+5d: False. The bias of QDA can be smaller than LDA, which produces higher variance than LDA.
+The higher variance produces higher error rate in test data. See figure 4.9 for reference.
