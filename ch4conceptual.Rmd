@@ -72,3 +72,38 @@ See the first paragraph of page 150 for reference.
 
 5d: False. The bias of QDA can be smaller than LDA, which produces higher variance than LDA.
 The higher variance produces higher error rate in test data. See figure 4.9 for reference.
+
+# Question 6
+
+According to equation (4.7):
+$$
+p(X) = \frac{e^{\beta_0 + \beta_1X_1 + \beta_2X_2}}{1 + e^{\beta_0 + \beta_1X_1 + \beta_2X_2}} \\
+= \frac{e^{-6 + 0.05 \times 40 + 3.5}}{1 + e^{-6 + 0.05 \times 40 + 3.5}} \\
+= 0.378
+$$
+
+Let the hours needed to study as $h$, we have:
+$$
+p(X) = \frac{e^{-6 + 0.05h + 3.5}}{1 + e^{-6 + 0.05h + 3.5}} = 0.5 \\
+\Rightarrow -6 + 0.05h + 3.5 = 0 \\
+h = 50
+$$
+
+The student need 50 hours to have a 50% chance of getting an A in the class.
+
+# Question 7
+
+Let 1 denotes "Yes" and 2 denotes "No', with equation (4.15) we have: $\mu_1 = 10, \mu_2 = 0, \pi_1 = 0.8, \pi_2 = 0.2, \sigma^2 = 36$. 
+Take them into equation (4.12) with $x = 4$:
+```{r}
+item1 = 0.8 / sqrt(2*pi) / 6 * exp(-1 / (2 * 36) * (4 - 10)^2)
+item2 = 0.2 / sqrt(2*pi) / 6 * exp(-1 / (2 * 36) * (4 - 0)^2)
+p1x = item1 / (item1 + item2)
+p1x
+```
+
+The probability issuing a dividend this year is 75.2%.
+
+# Question 8
+For KNN with $k = 1$, the training error rate is 0%, because for any training observation, the response is the nearest predictor itself. So the test error is 36% for KNN, which is higher than that of logistic regression (30%).
+So far the latter is better. But I prefer using higer $k$ value to find out better solutions.
