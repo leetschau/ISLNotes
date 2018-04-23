@@ -107,3 +107,16 @@ The probability issuing a dividend this year is 75.2%.
 # Question 8
 For KNN with $k = 1$, the training error rate is 0%, because for any training observation, the response is the nearest predictor itself. So the test error is 36% for KNN, which is higher than that of logistic regression (30%).
 So far the latter is better. But I prefer using higer $k$ value to find out better solutions.
+
+# Question 9
+## 9a
+Let $p$ denotes the default probability, we have:
+$$
+\frac{p}{1-p} = 0.37 \Rightarrow p = \frac{0.37}{1+0.37} = 0.27
+$$
+
+## 9b
+The odds of default is:
+$$
+\frac{0.16}{1-0.16} = 0.19
+$$
