@@ -1,0 +1,249 @@
+---
+title: "Applied Exercises of Chapter 4"
+output: html_notebook
+---
+
+# Question 10
+## 10a
+```{r}
+library(ISLR)
+str(Weekly)
+summary(Weekly)
+plot(Weekly)
+```
+The *Volume* increased with the *Year*.
+No other patterns are clear enough to be observed.
+
+## 10b
+```{r}
+lrf <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, data = Weekly, family = 'binomial')
+summary(lrf)
+```
+*Lag2* is statistically significant, with p-value 3%.
+
+## 10c
+```{r}
+lrp <- predict(lrf, type = 'response')
+lrpred <- rep('Down', length(lrp))
+lrpred[lrp > 0.5] <- 'Up'
+table(lrpred, Weekly$Direction)
+```
+
+The overall error rate: $(48 + 430) \div (54 + 48 + 430 + 557) = 0.439$
+
+Logistic regression predict correctly most of time when *direction* is "Up": $557 \div (557 + 48)$, wrongly most of time when it's "Down": $54 \div (54 + 430)$.
+
+## 10d
+```{r}
+isTest <- Weekly$Year > 2008
+training <- Weekly[!isTest, ]
+testing <- Weekly[isTest, ]
+f10d <- glm(Direction ~ Lag2, data = training, family = 'binomial')
+pred10d <- predict(f10d, testing, type = 'response')
+res10d <- rep('Down', length(pred10d))
+res10d[pred10d > 0.5] = 'Up'
+table(res10d, testing$Direction)
+mean(res10d == testing$Direction)
+```
+
+## 10e
+```{r}
+library(MASS)
+f10e <- lda(Direction ~ Lag2, data = training)
+pred10e <- predict(f10e, testing)
+table(pred10e$class, testing$Direction)
+mean(pred10e$class == testing$Direction)
+```
+
+## 10f
+```{r}
+f10f <- qda(Direction ~ Lag2, data = training)
+pred10f <- predict(f10f, testing)
+table(pred10f$class, testing$Direction)
+mean(pred10f$class == testing$Direction)
+```
+
+## 10g
+```{r}
+library(class)
+set.seed(1)
+f10g <- knn(as.matrix(training$Lag2), as.matrix(testing$Lag2), training$Direction, k = 1)
+table(f10g, testing$Direction)
+mean(f10g == testing$Direction)
+```
+Notice the first 2 parameters of `knn()` function must be data frame or matrix.
+
+## 10h
+
+Logistic Regression in (d) and LDA method in (e) provide the best result (correct rate: 62.5%) on this data.
+
+# Question 11
+## 11a
+```{r}
+auto11 <- Auto
+auto11$mpg01 <- 0
+auto11$mpg01[Auto$mpg > median(Auto$mpg)] <- 1
+```
+
+## 11b
+```{r}
+plot(auto11)
+par(mfrow=c(3,3))
+boxplot(cylinders ~ mpg01, data = auto11)
+boxplot(displacement ~ mpg01, data = auto11)
+boxplot(horsepower ~ mpg01, data = auto11)
+boxplot(weight ~ mpg01, data = auto11)
+boxplot(acceleration ~ mpg01, data = auto11)
+boxplot(year ~ mpg01, data = auto11)
+boxplot(origin ~ mpg01, data = auto11)
+par(mfrow = c(1,1))
+cor(auto11[, -9])  # calculate cor matrix except *name* column
+```
+
+*cylinder*, *displacement*, *horsepower* and *weight* have relative high negative corelations with *mpg01* (absolute value are all above 0.65).
+
+## 11c
+```{r}
+isTraining <- sample(nrow(auto11), nrow(auto11) * 0.8)
+training <- auto11[isTraining, ]
+testing <- auto11[-isTraining, ]
+```
+
+## 11d
+```{r}
+f11d <- lda(mpg01 ~ cylinders + displacement + horsepower + weight, data = auto11)
+pred11d <- predict(f11d, testing)
+mean(pred11d$class == testing$mpg01)
+```
+The test error is $1 - 0.873 = 0.127%$.
+
+## 11e
+```{r}
+f11e <- qda(mpg01 ~ cylinders + displacement + horsepower + weight, data = auto11)
+pred11e <- predict(f11e, testing)
+1 - mean(pred11e$class == testing$mpg01)
+```
+
+## 11f
+```{r}
+f11f <- glm(mpg01 ~ cylinders + displacement + horsepower + weight, data = auto11)
+pred11f <- predict(f11f, testing)
+res11f <- rep(0, length(pred11f))
+res11f[pred11f > 0.5] = 1
+1 - mean(res11f == testing$mpg01)
+```
+
+## 11g
+```{r}
+set.seed(1)
+train11g <- auto11[isTraining, c('cylinders', 'displacement', 'horsepower', 'weight')]
+test11g <- auto11[-isTraining, c('cylinders', 'displacement', 'horsepower', 'weight')]
+trainRes <- auto11$mpg01[isTraining]
+f11g1 <- knn(train11g, test11g, trainRes, k = 1)
+mean(f11g1 == auto11$mpg01[-isTraining])
+f11g3 <- knn(train11g, test11g, trainRes, k = 3)
+mean(f11g3 == auto11$mpg01[-isTraining])
+f11g5 <- knn(train11g, test11g, trainRes, k = 5)
+mean(f11g5 == auto11$mpg01[-isTraining])
+f11g100 <- knn(train11g, test11g, trainRes, k = 100)
+mean(f11g100 == auto11$mpg01[-isTraining])
+```
+The minimum error rate is $1 - 0.937 = 0.063$.
+$k = 5$ performs best on this data set.
+
+# Question 12
+## 12a
+```{r}
+Power <- function() { 2 ^ 3 }
+Power()
+```
+
+## 12b & 12c
+```{r}
+Power2 <- function(x, a) { x ^ a }
+Power2(3, 8)
+Power2(10, 3)
+Power2(8, 17)
+Power2(131, 3)
+```
+
+## 12d
+As the current version of R, the last expression is the return value of the function.
+So it's unnecessary to use `return()` function explicitly:
+```{r}
+version
+```
+
+## 12e
+```{r}
+par(mfrow=c(1,2))
+x <- 1:10
+plot(x, Power2(x, 2), main = 'f(x) = x^2', xlab = 'x = 1:10', ylab = 'x^2')
+plot(log(x), log(Power2(x, 2)), main = 'log(f(x))', xlab = 'x = 1:10', ylab = '2 * log(x)')
+```
+
+## 12f
+```{r}
+PlotPower <- function(x, p) {
+  plot(x, x ^ p, main = 'power p of x')
+}
+PlotPower(1:10, 3)
+```
+
+# Question 13
+Extract training and testing data, and predict based on the first group of predictors with logistic regression method:
+```{r}
+boston13 <- Boston
+boston13$crime.rate <- 0
+boston13$crime.rate[Boston$crim > median(Boston$crim)] <- 1
+isTraining <- sample(nrow(boston13), 0.8 * nrow(boston13))
+training <- boston13[isTraining, ]
+testing <- boston13[-isTraining, ]
+lr.fit1 <- glm(crime.rate ~ zn + indus + chas + nox, data = boston13, family = 'binomial')
+lr.pred1 <- predict(lr.fit1, testing)
+lr.res1 <- rep(0, length(lr.pred1))
+lr.res1[lr.pred1 > median(Boston$crim)] <- 1
+mean(lr.res1 == testing$crime.rate)
+```
+
+Using another group of predictors:
+```{r}
+lr.fit2 <- glm(crime.rate ~ rm + age + dis + rad, data = boston13, family = 'binomial')
+lr.pred2 <- predict(lr.fit2, testing)
+lr.res2 <- rep(0, length(lr.pred2))
+lr.res2[lr.pred2 > median(Boston$crim)] <- 1
+mean(lr.res2 == testing$crime.rate)
+```
+
+Predict on the 1st group predictors with LDA:
+```{r}
+lda.fit1 <- lda(crime.rate ~ zn + indus + chas + nox, data = boston13)
+lda.pred1 <- predict(lda.fit1, testing)
+mean(lda.pred1$class == testing$crime.rate)
+```
+
+Predict on the 2nd group predictors with LDA:
+```{r}
+lda.fit2 <- lda(crime.rate ~ rm + age + dis + rad, data = boston13)
+lda.pred2 <- predict(lda.fit2, testing)
+mean(lda.pred2$class == testing$crime.rate)
+```
+
+Predict on the 1st group predictors with KNN (k = 5):
+```{r}
+ktrain1 <- boston13[isTraining, c('zn', 'indus', 'chas', 'nox')]
+ktest1 <- boston13[-isTraining, c('zn', 'indus', 'chas', 'nox')]
+ktrain.result <- boston13$crime.rate[isTraining]
+kmod1 <- knn(ktrain1, ktest1, ktrain.result1, k = 5)
+mean(kmod1 == boston13$crime.rate[-isTraining])
+```
+
+Predict on the 2nd group predictors with KNN (k = 5):
+```{r}
+ktrain2 <- boston13[isTraining, c('rm', 'age', 'dis', 'rad')]
+ktest2 <- boston13[-isTraining, c('rm', 'age', 'dis', 'rad')]
+kmod2 <- knn(ktrain2, ktest2, ktrain.result, k = 5)
+mean(kmod2 == boston13$crime.rate[-isTraining])
+```
+
+KNN (k=5) based on the first group of predictors has the highest accuracy.
