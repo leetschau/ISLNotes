@@ -116,3 +116,11 @@ set.seed(1)
 boot(Auto, boot.fn2, R = 1000)
 summary(lm(mpg ~ poly(horsepower, 2), data = Auto))$coef
 ```
+
+Answer: the equivalent of `x + I(x^2)` is `poly(x, 2, raw = TRUE)`:
+```{r}
+summary(lm(mpg ~ poly(horsepower, 2, raw = TRUE), data = Auto))$coef
+```
+
+`poly(x, n)` is [orthogonal polynomials](https://en.wikipedia.org/wiki/Orthogonal_polynomials) with degree $n$.
+See G. Grothendieck's answer in [What does the R function `poly` really do?](https://stackoverflow.com/questions/19484053/what-does-the-r-function-poly-really-do) for detailed explanations.
