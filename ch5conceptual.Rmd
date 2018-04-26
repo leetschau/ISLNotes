@@ -1,0 +1,59 @@
+---
+title: "Conceptual Exercises of Chapter 5"
+output: html_notebook
+---
+
+# Question 1
+
+Let $Var(X) = \sigma_X^2$, $Var(Y) = \sigma_Y^2$, $Cov(X, Y) = \sigma_{XY}$, we have:
+$$
+Var(\alpha X + (1 - \alpha) Y) \\
+= \alpha^2 \sigma_X^2 + (1-\alpha)^2 \sigma_Y^2 + 2\alpha(1 - \alpha)\sigma_{XY}
+$$
+See section *Basic properties* of [Variance](https://en.wikipedia.org/wiki/Variance) for reference.
+
+Its differential to $\alpha$ is 0 at minimum:
+$$
+2\alpha\sigma_X^2 - 2(1 - \alpha)\sigma_Y^2 + 2\sigma_{XY}(1 - 2\alpha) = 0 \\
+(\sigma_X^2 + \sigma_Y^2 - 2\sigma_{XY}) \alpha = \sigma_Y^2 - \sigma_{XY} \\
+\therefore \alpha = \frac{\sigma_Y^2 - \sigma_{XY}}{\sigma_X^2 + \sigma_Y^2 - 2\sigma_{XY}}
+$$
+which is the same with equation (5.6).
+
+# Question 2
+## 2a
+The probability of the first bootstrap observation is not the *j*th observation from the original sample is $\frac{n-1}n$.
+
+## 2b
+The probability of the second bootstrap observation is not the *j*th observation from the original sample is $\frac{n-1}n$, too. Because the observation is selected with replacement.
+
+## 2c
+The probability that the *j*th observation is not in the bootstrap sample equals to all $n$ bootstrap observations are not the *j*th observation from the original sample.
+The possibility of each selection is $\frac{n-1}n$, so the possibility of all $n$ selections is $(1 - \frac 1n)^n$.
+
+## 2d ~ 2f
+When n = 5: $1 - (1 - \frac15)^5 = 0.672$
+
+When n = 100: $1 - (1 - \frac1{100})^{100} = 0.634$
+
+When n = 10000: $1 - (1 - \frac1{10000})^{10000} = 0.632$
+
+## 2g
+```{r}
+n <- 1:100
+pibs <- function(x) 1 - (1 - 1/x) ^ x
+plot(n, pibs(n), type = 'l')
+```
+
+Function $1 - (1 - \frac1n)^n$ is converged to 0.632.
+
+## 2h
+```{r}
+store=rep(NA, 10000)
+for(i in 1:10000) {
+  store[i] <- sum(sample(1:100, rep=TRUE)==4) > 0
+}
+mean(store)
+```
+
+This probability is converged to 0.632, too.
