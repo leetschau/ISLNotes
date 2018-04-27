@@ -1,0 +1,67 @@
+---
+title: "Applied Exercises of Chapter 5"
+output: html_notebook
+---
+
+# Question 5
+## 5a
+```{r}
+library(ISLR)
+lrf <- glm(default ~ balance + income, data = Default, family = 'binomial')
+summary(lrf)
+```
+
+## 5b
+```{r}
+vsd <- function(seed) {
+  set.seed(seed)
+  isTraining <- sample(nrow(Default), 0.5 * nrow(Default))
+  f5b <- glm(default ~ balance + income, data = Default, family = 'binomial', subset = isTraining)
+  default.pred <- predict(f5b, Default[-isTraining, ], type = 'response')
+  def.res <- rep('No', 0.5 * nrow(Default))
+  def.res[default.pred > 0.5] <- 'Yes'
+  mean(def.res != Default[-isTraining, "default"])
+}
+vsd(1)
+```
+
+## 5c
+```{r}
+vsd(3)
+vsd(1)
+vsd(17)
+vsd(1)
+vsd(23)
+```
+
+So the error rate is a functin a random seed.
+The mean of error rate is about 2.6%.
+
+## 5d
+```{r}
+set.seed(1)
+isTraining <- sample(nrow(Default), 0.5 * nrow(Default))
+f5d <- glm(default ~ balance + income + student, data = Default, family = 'binomial', subset = isTraining)
+default.pred <- predict(f5d, Default[-isTraining, ], type = 'response')
+def.res <- rep('No', 0.5 * nrow(Default))
+def.res[default.pred > 0.5] <- 'Yes'
+mean(def.res != Default[-isTraining, "default"])
+```
+Including *student* reduce the error rate a little ($0.0288 - 0.0286$) for predicting.
+
+# Question 6
+## 6a
+```{r}
+set.seed(1)
+f6a <- glm(default ~ balance + income, data = Default, family = 'binomial')
+summary(f6a)
+```
+
+## 6b & 6c
+```{r}
+boot.fn <- function(data, index) coef(glm(default ~ balance + income, data = data, family = 'binomial', subset = index))
+boot(Default, boot.fn, R = 1000)
+```
+
+## 6d
+The standard errors from `glm()` and `boot()` function are basically the same.
