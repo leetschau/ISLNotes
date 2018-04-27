@@ -57,3 +57,18 @@ mean(store)
 ```
 
 This probability is converged to 0.632, too.
+
+# Question 3
+## 3a
+k-fold cross-validation divide the whole data set into k groups.
+The first group is used as testing set, and the others are used as training set.
+
+## 3b
+Compared with validation set approach, k-fold is stable, which means the calculation results from the same data set are always the same.
+
+Compared with LOOCV, k-fold is more calculating efficient, and has lower test error rate, due to better bias-variance trade-off.
+
+# Question 4
+The standard deviation of prediction can be calculated with equation (5.8) manually.
+
+It can be found in the result of function `boot()` in R, too. See examples in section *Estimating the Accuracy of a Statistic of Interest* of 5.3.4.
