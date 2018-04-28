@@ -65,3 +65,176 @@ boot(Default, boot.fn, R = 1000)
 
 ## 6d
 The standard errors from `glm()` and `boot()` function are basically the same.
+
+# Question 7
+## 7a
+```{r}
+lrf <- glm(Direction ~ Lag1 + Lag2, data = Weekly, family = binomial)
+```
+
+## 7b
+```{r}
+lrf <- glm(Direction ~ Lag1 + Lag2, data = Weekly[-1,], family = binomial)
+```
+
+## 7c
+```{r}
+prob.7c <- predict(lrf, Weekly[1,], type = 'response')
+(if (prob.7c > 0.5) 'Up' else 'Down') == Weekly[1, 'Direction']
+```
+
+## 7d
+```{r}
+res <- rep(FALSE, nrow(Weekly))
+for (i in 1:nrow(Weekly)) {
+  lrf <- glm(Direction ~ Lag1 + Lag2, data = Weekly[-i,], family = binomial)
+  prob.7d <- predict(lrf, Weekly[i,], type = 'response')
+  res[i] <- (if (prob.7d > 0.5) 'Up' else 'Down') == Weekly[i, 'Direction']
+}
+mean(res)
+```
+
+So the error rate is $1 - 0.55 = 0.45$.
+
+# Question 8
+## 8a
+```{r}
+set.seed(1)
+x <- rnorm(100)
+y <- x - 2 * x^2 + rnorm(100)
+```
+Here there are 100 observations and one predictor, so $n=100, p=2$.
+The equation form:
+$$
+y = -2 x^2 + x + \epsilon
+$$
+## 8b
+```{r}
+plot(x, y)
+```
+
+## 8c
+```{r}
+set.seed(1)
+inp <- data.frame(x, y)
+
+fit <- glm(y ~ x)
+cv.glm(inp, fit)$delta
+
+fit <- glm(y ~ poly(x, 2))
+cv.glm(inp, fit)$delta
+
+fit <- glm(y ~ poly(x, 3))
+cv.glm(inp, fit)$delta
+
+fit <- glm(y ~ poly(x, 4))
+cv.glm(inp, fit)$delta
+```
+Note that the default value of parameter *K* of function `cv.glm()` is *n*.
+So if the *K* is not specified (like in above codes), `cv.glm()` gives LOOCV result.
+See `?cv.glm` for details.
+
+## 8d
+```{r}
+set.seed(5)
+inp <- data.frame(x, y)
+
+fit <- glm(y ~ x)
+cv.glm(inp, fit)$delta
+
+fit <- glm(y ~ poly(x, 2))
+cv.glm(inp, fit)$delta
+
+fit <- glm(y ~ poly(x, 3))
+cv.glm(inp, fit)$delta
+
+fit <- glm(y ~ poly(x, 4))
+cv.glm(inp, fit)$delta
+```
+
+The results are the same with (c).
+Because the LOOCV is stable compared with validation-set approach.
+
+## 8e
+
+`y ~ poly(x, 2)` had the smallest LOOCV error, because it the same with the true equation
+$y = -2x^2 + x + \epsilon$.
+
+## 8f
+```{r}
+summary(fit)
+```
+
+*p-value*s shows linear and quadratic terms are statistical significant.
+
+From (c) we know that there is a significant error decrease from linear to quadratic (from 7.29 to 0.94). While the decrease almost disappeared from quadratic to cubic (0.94 to 0.96).
+This suggests the linear and quadratic terms are statistically significant,
+which agrees with the summary of model `glm(y ~ poly(x, 4))` above.
+
+# Question 9
+## 9a
+```{r}
+library(MASS)
+mu.bar <- mean(Boston$medv)
+```
+So $\hat\mu = 22.533$.
+
+## 9b
+Based on [Standard error](https://en.wikipedia.org/wiki/Standard_error), the *standard error of the sample mean* is calculated with:
+$$
+\sqrt{\frac{\sum_{i=1}^n (x_i - \hat\mu)^2}{n(n-1)}}
+$$
+So we have:
+```{r}
+n <- nrow(Boston)
+sqrt(sum((Boston$medv - mu.bar)^2) / (n*(n-1)))
+```
+
+Or use function `sd`, which gives the same result:
+```{r}
+sd(Boston$medv) / sqrt(nrow(Boston))
+```
+
+## 9c
+```{r}
+boot.fn <- function(data, index) mean(data[index])
+boot(Boston$medv, boot.fn, R = 1000)
+```
+
+The *se* by *boot* is almost the same with that in (b) (0.4089 vs 0.4086).
+
+Note the second parameter of function `boot()` must have 2 parameters.
+The first is the data (the first parameter of `boot()`), the second is the indices.
+See `?boot` for details.
+
+## 9d
+```{r}
+mu.bar - 2 * 0.4086; mu.bar + 2 * 0.4086
+t.test(Boston$medv)
+```
+They are almost the same.
+
+## 9e
+```{r}
+median(Boston$medv)
+```
+
+## 9f
+```{r}
+med.se <- function(data, index) median(data[index])
+boot(Boston$medv, med.se, R = 1000)
+```
+
+## 9g
+```{r}
+quantile(Boston$medv, 0.1)
+```
+
+## 9h
+
+```{r}
+q0.1 <- function(data, index) quantile(data[index], c(0.1))
+boot(Boston$medv, q0.1, 1000)
+```
+
+The standard error of $\hat\mu_{0.1}$ is 0.506.
