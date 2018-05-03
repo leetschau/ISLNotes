@@ -1,0 +1,80 @@
+---
+title: "Lab of Chapter 6"
+output: html_notebook
+---
+
+# 6.5.1 Best Subset Selection
+
+Data preprocessing:
+```{r}
+library(ISLR)
+str(Hitters)
+dim(Hitters)
+sum(is.na(Hitters$Salary))
+Hitters <- na.omit(Hitters)
+dim(Hitters)
+```
+
+Step (2) of *Algorithm 6.1*:
+```{r}
+library(leaps)
+regfit.full <- regsubsets(Salary ~ ., data = Hitters)
+summary(regfit.full)
+```
+
+Step (3) of *Algorithm 6.1*:
+```{r}
+regfit.full <- regsubsets(Salary ~ ., data = Hitters, nvmax = ncol(Hitters))
+reg.summary <- summary(regfit.full)
+names(reg.summary)
+reg.summary$rsq
+```
+Here we chose $R^2$ as the test standard of which of $M_0, \dots, M_p$ is the best model.
+
+
+Plot the result:
+```{r}
+par(mfrow=c(2,2))
+plot(reg.summary$rss, xlab = 'Number of variables', ylab = 'RSS', type = 'l')
+plot(reg.summary$adjr2, xlab = 'Number of variables', ylab = 'Adjusted Rsq', type = 'l')
+rsq.max.idx <- which.max(reg.summary$adjr2)
+points(rsq.max.idx, reg.summary$adjr2[rsq.max.idx], col = 'red', cex = 2, pch = 20)
+plot(reg.summary$cp, xlab = 'Number of variables', ylab = 'Cp', type = 'l')
+cp.min.idx <- which.min(reg.summary$cp)
+points(cp.min.idx, reg.summary$cp[cp.min.idx], col = 'red', cex = 2, pch = 20)
+bic.min.idx <- which.min(reg.summary$bic)
+plot(reg.summary$bic, xlab = 'Number of variables', ylab = 'BIC', type = 'l')
+points(bic.min.idx, reg.summary$bic[bic.min.idx], col = 'red', cex = 2, pch = 20)
+```
+
+Plot with `regsubsets()`'s built-in function:
+```{r}
+plot(regfit.full, scale = 'r2')
+plot(regfit.full, scale = 'adjr2')
+plot(regfit.full, scale = 'Cp')
+plot(regfit.full, scale = 'bic')
+```
+With these plots we can answer which predictors are selected in the *best* model with a specific standard.
+
+For example, in the top row of the second plot (adjusted $R^2$) above, when the *adjr2* get the maximum value, 0.52, some of the marked (as black) variables are *AtBat*, *Hits*, *Walks*, *CRBI*, *DivisionW*, and *PutOuts*, which are marked in the 6th row of `summary(regfit.full)` outputs.
+
+Get the coefficients ($\beta_i, i \in [1..p]$) of equation (6.1):
+```{r}
+coef(regfit.full, 6)
+```
+
+# 6.5.2 Forward and Backward Stepwise Selection
+```{r}
+regfit.fwd <- regsubsets(Salary ~ ., data = Hitters, nvmax = ncol(Hitters), method = 'forward')
+summary(regfit.fwd)
+regfit.bwd <- regsubsets(Salary ~ ., data = Hitters, nvmax = ncol(Hitters), method = 'backward')
+summary(regfit.bwd)
+```
+
+Which predictors in $M_k$ ($k=7$ here), and what are their coefficients $\beta_i$:
+```{r}
+coef(regfit.full, 7)
+coef(regfit.fwd, 7)
+coef(regfit.bwd, 7)
+```
+
