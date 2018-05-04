@@ -100,6 +100,7 @@ coef(regfit.best, 10)
 Write predict function for `regsubsets()` function:
 ```{r}
 predict.regsubsets <- function(object, newdata, id, ...) {
+  print(paste('dimenson of test set:', paste(dim(newdata), collapse = " ")))
   form <- as.formula(object$call[[2]])
   mat <- model.matrix(form, newdata)
   coefi <- coef(object, id = id)
@@ -117,13 +118,19 @@ coef(regfit.best, 10)
 k <- 10
 set.seed(1)
 folds <- sample(1:k, nrow(Hitters), replace = TRUE)
+for (i in 1:k) {
+  print(paste('There are', sum(folds == i), 'test observations in fold', i))
+}
 cv.errors <- matrix(NA, k, 19, dimnames = list(NULL, paste(1:19)))
 for (j in 1:k) {
   best.fit <- regsubsets(Salary ~ ., data = Hitters[folds != j,], nvmax = 19)
+  print(paste('====== The no.', j, 'round: ======'))
   for (i in 1:19) {
     pred <- predict(best.fit, Hitters[folds == j, ], id = i)
+    # print(paste('i =', i, ', j =', j, 'dim(pred):', paste(dim(pred), collapse = " ")))
     cv.errors[j, i] <- mean((Hitters$Salary[folds == j] - pred) ^ 2)
   }
+  print(paste('dim(pred):', paste(dim(pred), collapse = " ")))
 }
 mean.cv.errors <- apply(cv.errors, 2, mean)
 mean.cv.errors
@@ -132,3 +139,51 @@ regfit.best <- regsubsets(Salary ~ ., data = Hitters, nvmax = 19)
 coef(regfit.best, 11)
 ```
 
+## How Above Codes Work
+
+### Backgrounds
+
+[Design Matrix](https://en.wikipedia.org/wiki/Design_matrix)：一般用$X$表示，行数为$n$ （试验次数，number of observations），列数为$p$（特征数量，number of features），design matrix满足公式(6.1)，或者写成矩阵形式：$y = X\beta$，其中 $y$ 是长度为 $n$ 的结果向量(response variable)，$\beta$ 是长度为 $p$ 的回归系数向量。
+
+在代码`test.mat <- model.matrix(Salary ~ ., data = Hitters[test,])`中：
+`Salary`是 $y$，`Hitters[test,]`中除去 `Salary` 的其他19个特征组成了 $X$ 矩阵，
+所以`data.frame(test.mat[, -1])` 中*League*, *Division* 和 *NewLeague* 3 个factor型特征名字改变后（例如 *League* 变成了 *LeagueN*）变成了 `within(Hitters[test,], rm(Salary))`中对应的数字，其他16个数值型特征的值完全相同。
+
+
+`%*%` 表示矩阵乘法：
+```{r}
+x <- 1:4
+x %*% x
+```
+
+参考 [Matrix Multiplication](http://astrostatistics.psu.edu/su07/R/html/base/html/matmult.html)
+
+在 R 语言中，`Salary ~ .`是一个 *formula* 对象：
+```{r}
+class(Salary ~ .)
+```
+
+### Function Explanations
+
+From line 124, `pred <- predict(best.fit, Hitters[folds == j, ], id = i)`, we can see the parameters of function `predict.regsubsets` are:
+
+* object: a fit result of function `regsubsets`. For example, when `regfit.best` used as `object` in function `predict.regsubsets`, we can see:
+```{r}
+regfit.best$call
+class(regfit.best$call)
+regfit.best$call[[2]]
+class(regfit.best$call[[2]])
+as.formula(regfit.best$call[[2]])
+class(as.formula(regfit.best$call[[2]]))
+```
+
+
+* newdata: here it used to pass the test dataset to predict function;
+
+* id: 在第 *j* 轮交叉验证中（被标记为 *j* 的数据做测试数据，其他数据做训练数据），*id* 用来确定 predictors 的数量，例如 $id = 6$ 时，`coef(regfit.best, id = 6)`表示有6个predictors的系数向量 $\beta$。
+
+`best.fit` 是在 training set 上得到的 best subsets 模型，`coefi` 是基于这个模型得到的系数，所以在`predict.regsubsets`的返回值 $\hat y$ 中，系数 $\beta$ 是从训练集上得到的，$X$ 则来自于测试集，$\hat y$的长度就是训练集的长度，由于整个训练集被 `sample` 函数随机分为10组，每组的数量不完全一样。从上面的输出可以看到，第一轮测试集长度为13，第二轮长度为25，
+……，第10轮长度为24，记为$v = c(13, 25, 31, 32, 33, 27, 26, 30, 22, 24)$。
+
+`cv.errors[j, i] <- mean((Hitters$Salary[folds == j] - pred) ^ 2)`中，`pred` 中保存了第 *j* 轮交叉验证中的 *i* 个 predictors 的 best subsets 的计算结果 $\hat y_{ji}$，实际值 $y_{ji}$ 是 `Hitters$Salary[folds == j]`，二者的长度都是此轮测试集的长度 $v_j$，所以误差项的表达式是：
+$$CVerror_{ji} = \frac{\sum^{v_j}_{u=1}(y_{ji} - \hat y_{ji}) ^ 2}{v_j}$$
