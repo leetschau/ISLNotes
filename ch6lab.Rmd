@@ -187,3 +187,128 @@ class(as.formula(regfit.best$call[[2]]))
 
 `cv.errors[j, i] <- mean((Hitters$Salary[folds == j] - pred) ^ 2)`中，`pred` 中保存了第 *j* 轮交叉验证中的 *i* 个 predictors 的 best subsets 的计算结果 $\hat y_{ji}$，实际值 $y_{ji}$ 是 `Hitters$Salary[folds == j]`，二者的长度都是此轮测试集的长度 $v_j$，所以误差项的表达式是：
 $$CVerror_{ji} = \frac{\sum^{v_j}_{u=1}(y_{ji} - \hat y_{ji}) ^ 2}{v_j}$$
+
+# 6.6.1 Ridge Regression
+Define the input data:
+```{r}
+x <- model.matrix(Salary ~ ., data = Hitters)[, -1]
+y <- Hitters$Salary
+```
+
+Run ridge regrssion:
+```{r}
+library(glmnet)
+grid <- 10 ^ seq(10, -2, length = 100)
+ridge.mod <- glmnet(x, y, alpha = 0, lambda = grid)
+dim(coef(ridge.mod))
+```
+
+Study the calculated cofficients:
+```{r}
+ridge.mod$lambda[50]
+coef(ridge.mod)[, 50]
+sqrt(sum(coef(ridge.mod)[-1, 50] ^ 2))
+
+ridge.mod$lambda[60]
+coef(ridge.mod)[, 60]
+sqrt(sum(coef(ridge.mod)[-1, 60] ^ 2))
+```
+
+Get the coefficients when $\lambda = 50$:
+```{r}
+predict(ridge.mod, s = 50, type = 'coefficients')
+```
+
+Fit the ridge regression model on training set:
+```{r}
+set.seed(1)
+train <- sample(1: nrow(x), nrow(x)/2)
+test <- -train
+y.test <- y[test]
+ridge.mod <- glmnet(x[train,], y[train], alpha = 0, lambda = grid, thresh = 1e-12)
+```
+
+Calculate the MSE when $\lambda = 4$:
+```{r}
+ridge.pred <- predict(ridge.mod, s = 4, newx = x[test,])
+mean((ridge.pred - y.test) ^ 2)
+```
+
+Calculate the MSE when $\lambda \to \infty$ ($\beta \to 0$) on test set:
+```{r}
+mean((mean(y[train]) - y.test) ^ 2)
+ridge.pred <- predict(ridge.mod, s = 1e10, newx = x[test,])
+mean((ridge.pred - y.test) ^ 2)
+```
+
+Calculate the MSE with least square fit ($\lambda = 0$):
+```{r}
+ridge.pred <- predict(ridge.mod, s = 0.01, newx = x[test,], exact = TRUE)
+mean((ridge.pred - y.test) ^ 2)
+```
+
+When `s < 0.01`, the following error arises:
+
+> Error: used coef.glmnet() or predict.glmnet() with `exact=TRUE` so must in addition supply original argument(s) x and y in order to safely rerun glmnet 
+
+So here I use `s = 0.01` instead of `s = 0` as a workaround.
+
+According to [trying to use exact=TRUE feature in R glmnet](https://stackoverflow.com/questions/49804793/trying-to-use-exact-true-feature-in-r-glmnet), the parameter *penalty.factor* must be provided when both `s = 0` and `exact = TRUE` in function `predict.glmnet()`.
+But I don't konw what does this parameter mean so I can't set its value.
+
+Compare the coefficients created by `lm()` and `glmnet(..., s = 0)`:
+```{r}
+lm(y ~ x, subset = train)
+predict(ridge.mod, s = 0.01, exact = TRUE, type = 'coefficients')[1:20,]
+```
+
+They are almost the same.
+
+Choose the $\lambda$ with CV:
+```{r}
+set.seed(1)
+cv.out <- cv.glmnet(x[train, ], y[train], alpha = 0)
+plot(cv.out)
+best.lambda <- cv.out$lambda.min
+abline(v = log(best.lambda), lty = 2, lwd = 2, col = 'blue')
+```
+
+Test MSE associated with the best $\lambda$:
+```{r}
+ridge.pred <- predict(ridge.mod, s = best.lambda, newx = x[test, ])
+mean((ridge.pred - y.test) ^ 2)
+```
+
+Fit ridge regression model on the full data set, with the $\lambda$ chosen by cross-validation:
+```{r}
+out <- glmnet(x, y, alpha = 0)
+predict(out, s = best.lambda, type = 'coefficients')[1:20,]
+```
+
+All 19 coefficients are non-zero. So no predictors are excluded by ridge regression.
+
+# 6.6.2 Lasso
+
+Fit training data with Lasso model:
+```{r}
+lasso.mod <- glmnet(x[train, ], y[train], alpha = 1, lambda = grid)
+plot(lasso.mod)
+```
+
+Choose the $\lambda$ of Lasso with CV:
+```{r}
+set.seed(1)
+cv.out <- cv.glmnet(x[train, ], y[train], alpha = 1)
+plot(cv.out)
+lbl <- cv.out$lambda.min
+lasso.pred <- predict(lasso.mod, s = lbl, newx = x[test, ])
+mean((lasso.pred - y.test) ^ 2)
+```
+
+The coefficients of the Lasso model:
+```{r}
+out <- glmnet(x, y, alpha = 1, lambda = lbl)
+predict(out, type = 'coefficients', s = lbl)[1:20,]
+```
+
+So 12 of 19 predictors are excluded by Lasso.
