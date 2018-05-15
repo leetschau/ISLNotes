@@ -312,3 +312,67 @@ predict(out, type = 'coefficients', s = lbl)[1:20,]
 ```
 
 So 12 of 19 predictors are excluded by Lasso.
+
+# 6.7.1 Principal Components Regression
+
+Predict *Salary* of *Hitters* with PCR:
+```{r}
+library(pls)
+Hitters <- na.omit(Hitters)
+set.seed(2)
+pcr.fit <- pcr(Salary ~ ., data = Hitters, scale = TRUE, validation = 'CV')
+summary(pcr.fit)
+```
+
+Plot the result:
+```{r}
+validationplot(pcr.fit, val.type = 'MSEP')
+```
+
+Perform PCR on training set and evaluate the test performance:
+```{r}
+set.seed(1)
+x <- model.matrix(Salary ~ ., data = Hitters)[, -1]
+y <- Hitters$Salary
+Hitters <- na.omit(Hitters)
+train <- sample(1: nrow(x), nrow(x)/2)
+test <- -train
+y.test <- y[test]
+pcr.fit <- pcr(Salary ~ ., data = Hitters, subset = train, scale = TRUE, validation = 'CV')
+summary(pcr.fit)
+validationplot(pcr.fit, val.type = 'MSEP')
+pcr.pred <- predict(pcr.fit, x[test, ], ncomp = 7)
+mean((pcr.pred - y.test) ^ 2)
+```
+
+Fit PCR on the full data set, using M = 7, the number of components identified by cross-validation:
+```{r}
+pcr.fit <- pcr(y ~ x, scale = TRUE, ncomp = 7)
+summary(pcr.fit)
+```
+
+# 6.7.2 Partial Least Squares
+
+Perform PLS on training set of *Hitters*:
+```{r}
+pls.fit <- plsr(Salary ~ ., data = Hitters, subset = train, scale = TRUE, validation = 'CV')
+summary(pls.fit)
+validationplot(pls.fit, val.type = 'MSEP')
+```
+
+Evaluate test set MSE:
+```{r}
+pls.pred <- predict(pls.fit, x[test, ], ncomp = 2)
+mean((pls.pred - y.test) ^ 2)
+```
+
+Perform PLS on full data set using $M = 2$:
+```{r}
+pls.fit <- plsr(Salary ~ ., data = Hitters, scale = TRUE, ncomp = 2)
+summary(pls.fit)
+```
+
+Comparing the result with PCR ($M=7$), PLS explained 46.40% using only 2 components ($M=2$).
+While PCR used 7 components to explain 46.69%.
+Although PCR with $M=7$ explained 92.26% of the predictors ($X$), compared with 51.03% of PLS,
+the predictor explanation ability is not our interests.
