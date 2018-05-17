@@ -1,0 +1,20 @@
+---
+title: "Conceptual Exercises of Chapter 6"
+output: html_notebook
+---
+
+# Question 1
+
+(a): Best subset has the smallest training RSS.
+(b): It depends. Best subset has more combinations to choose. But all three methods choose candidates according to training RSS, which has no direct relationship with test RSS.
+
+(c):
+i: True; ii: True; iii: False; iv: False; v: False.
+
+# Question 2
+
+(a): iii is true. Lasso is more flexible than least squares (see first paragraph of section 6.4.3 on page 241). So its variance decreases compared with least squares. Although the bias increases at the same time, the increase is less than the decrease of variance. So the overall test RSS decreases.
+
+(b): iii is true. The same reason of lasso.
+
+(c): ii is true. The opposite of lasso's reason.
