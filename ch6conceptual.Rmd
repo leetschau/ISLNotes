@@ -18,3 +18,37 @@ i: True; ii: True; iii: False; iv: False; v: False.
 (b): iii is true. The same reason of lasso.
 
 (c): ii is true. The opposite of lasso's reason.
+
+# Question 3
+
+$s$ 是 Figure 6.7中左图中矩形的边长。
+$s = 0$ 时，矩形变成点 $(0, 0)$，除了截距 $\beta_0 \neq 0$，$\beta_i = 0, i = 1..p$，拟合曲线变成了一条水平线；此时 variance 为 0（不论 training set 如何变化，$\beta_i$ 不发生任何变化），$(bias)^2$ 最大；
+
+为什么$\lambda$ 与 $s$ 的变化方向是相反的：$\lambda$ 越大，式 (6.7) 第2项 $\lambda \sum_{j=1}^p \vert \beta_j \vert$ 的影响就越大，对 $\sum_{j=1}^p \vert \beta_j \vert$ 施加的要求更大，要求它的上限值比较小，也就是 $s$ 比较小。
+
+随着 $s$ 增加：
+
+(a): 根据图 6.7，training RSS 不断减小，当 $s$ 所代表的四边形覆盖 $\hat\beta$ 时达到最小值，$s$继续增大时 training RSS 不再继续降低；
+
+(b): $s=0$ 时 test RSS 比较大，随着 $s$ 增加，test RSS 开始降低，随着 $s$ 越来越大，对 $\beta_i$的约束越来越小，出现过拟合后 test RSS 开始增加，整体呈 U 型，参考图 (6.8)；
+
+(c): variance 在$s=0$时为0，随$s$增加而增加，增加到 least squares 对应的 variance 时不再增加，参考图(6.8)；
+
+(d): Squared bias 随 $s$ 增加而降低，降低到 least squares对应的 bias 时不在降低，参考图(6.8)；
+
+(e): Irreducible error 不随 $s$ 变化。
+
+# Question 4
+
+$\lambda$ 与 $s$ 的变化趋势相反（理由见上一题解答），$\lambda$ 不断增加的过程就是 Figure 6.7中右图圆半径不断减小的过程，所以本题中各量变化趋势与上题相反，初始状态相当于 least squares，随着 $\lambda$ 增加：
+
+(a): Training RSS 持续增加到 $\beta_i = 0, i=1..p$ 后不再变化；
+
+(b): 随着过拟合的较少而降低，过拟合消失后随着欠拟合的出现转而升高，呈U型变化；
+
+(c): variance 不断降低；
+
+(d): Squared bias 不断增加；
+
+(e): Irreducible error 不变。
+
