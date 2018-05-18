@@ -52,3 +52,87 @@ $\lambda$ 与 $s$ 的变化趋势相反（理由见上一题解答），$\lambda
 
 (e): Irreducible error 不变。
 
+# Question 5
+
+## (a) & (b)
+
+根据已知条件，设 $x_{11} = x, y_1 = y$，则问题可表示为：
+$$
+\begin{pmatrix} x & x \\ -x & -x \end{pmatrix}
+\begin{pmatrix} \hat\beta_1 \\ \hat\beta_2 \end{pmatrix} + \hat\beta_0
+= \begin{pmatrix} y \\ -y \end{pmatrix}
+$$
+
+展开上式得到以 $x,y$ 为自变量的二元一次方程组，二式相加，得到 $\hat\beta_0 = 0$，所以上式简化为：
+$$
+\begin{pmatrix} x & x \\ -x & -x \end{pmatrix}
+\begin{pmatrix} \hat\beta_1 \\ \hat\beta_2 \end{pmatrix}
+= \begin{pmatrix} y \\ -y \end{pmatrix}
+\tag{1} \label{eq1}
+$$
+Ridge regression优化问题可以表示为：
+求 $\hat\beta_1, \hat\beta_2$，使得 $M_R$ 取得最小值，其中 $M_R = RSS + \lambda \sum_{j=1}^p \beta_j^2$，将式 $\eqref{eq1}$ 代入式(6.5)，得到 $M_R$ 的表达式：
+$$
+M_R = 2 [y - (\hat\beta_1 + \hat\beta_2)x] ^ 2 + \lambda (\hat\beta_1^2 + \hat\beta_2^2)
+\tag{2} \label{eq2}
+$$
+
+$M_R$ 取最小值时有：
+$$
+\begin{cases}
+\frac{\partial M_R}{\partial \hat\beta_1} = 0 \\
+\frac{\partial M_R}{\partial \hat\beta_2} = 0
+\end{cases}
+$$
+
+将式 $\eqref{eq2}$ 代入上式得：
+$$
+\begin{cases}
+-4xy + 4x^2(\hat\beta_1 + \hat\beta_2) + 2\lambda\hat\beta_1 = 0 \\
+-4xy + 4x^2(\hat\beta_1 + \hat\beta_2) + 2\lambda\hat\beta_2 = 0
+\end{cases}
+$$
+
+两式相减得：$\hat\beta_1 = \hat\beta_2$.
+
+## (c) & (d)
+
+将式 $\eqref{eq1}$ 代入式(6.7)，得到Lasso优化目标$minimize_{\beta}\{M_L\}$，其中：
+$$
+M_L = 2 [y - (\hat\beta_1 + \hat\beta_2)x] ^ 2 + \lambda(\vert \hat\beta_1 \vert + \vert \hat\beta_2 \vert)
+\tag{3} \label{eq3}
+$$
+$M_L$ 取最小值时有：
+$$
+\begin{cases}
+\frac{\partial M_L}{\partial \hat\beta_1} = 0 \\
+\frac{\partial M_L}{\partial \hat\beta_2} = 0
+\end{cases}
+$$
+将式 $\eqref{eq3}$ 代入上式，当$\hat\beta_1 \gt 0, \hat\beta_2 \gt 0$时有：
+$$
+\begin{cases}
+-4xy + 4x^2(\hat\beta_1 + \hat\beta_2) + \lambda = 0 \\
+-4xy + 4x^2(\hat\beta_1 + \hat\beta_2) + \lambda = 0
+\end{cases} \\
+\therefore \hat\beta_1 + \hat\beta_2 = \frac{4xy - \lambda}{4x^2}
+$$
+
+当$\hat\beta_1 \lt 0, \hat\beta_2 \lt 0$时有：
+$$
+\begin{cases}
+-4xy + 4x^2(\hat\beta_1 + \hat\beta_2) - \lambda = 0 \\
+-4xy + 4x^2(\hat\beta_1 + \hat\beta_2) - \lambda = 0
+\end{cases} \\
+\therefore \hat\beta_1 + \hat\beta_2 = \frac{4xy + \lambda}{4x^2}
+$$
+
+当$\hat\beta \hat\beta_2 \lt 0$时有：
+$$
+\begin{cases}
+-4xy + 4x^2(\hat\beta_1 + \hat\beta_2) + \lambda = 0 \\
+-4xy + 4x^2(\hat\beta_1 + \hat\beta_2) - \lambda = 0
+\end{cases} \\
+\therefore \hat\beta_1 + \hat\beta_2 = \frac yx
+$$
+以上3种情况下 $\hat\beta_1, \hat\beta_2$ 都有无穷多解，所以使用Lasso方法有无穷多解。
