@@ -136,3 +136,100 @@ $$
 \therefore \hat\beta_1 + \hat\beta_2 = \frac yx
 $$
 以上3种情况下 $\hat\beta_1, \hat\beta_2$ 都有无穷多解，所以使用Lasso方法有无穷多解。
+
+# Question 6
+## (a)
+
+取 $y_1 = 9, \lambda = 2$，则以 $\beta_1$ 为自变量的 $M_R$ 曲线为：
+```{r}
+y1 <- 9
+lambda <- 2
+beta_hat <- y1/(1+lambda)  # based on equation (6.14)
+beta <- seq(beta_hat - 0.5, beta_hat + 0.5, by = 0.05)
+MR <- (y1 - beta)^2 + lambda * beta ^ 2
+plot(beta, MR, type = 'l')
+points(beta_hat, min(MR), col = 'red')
+```
+
+证明按照式(6.14)算出的 $\beta_1$ 能使 $M_R$ 取得最小值。
+
+证明式(6.14)：
+
+当 $p=1$ 时，式(6.12)展开为：
+$$
+M_R = (y_1 - \beta_1) ^ 2 + \lambda \beta_1^2
+= y_1^2 - 2 y_1\beta_1 + (1+\lambda) \beta_1^2
+$$
+当 $M_R$ 取最小值时其对 $\beta_1$ 的导数为0，代入上式得：
+$$
+\frac{\partial M_R}{\partial \beta_1} = 0 \\
+-2y_1 + 2(1 + \lambda) \beta_1 = 0 \\
+\therefore \beta_1 = \frac{y_1}{1 + \lambda}
+$$
+当 $p > 1$ 时，按同样的方法展开式(6.12)，并取：
+$$
+\frac{\partial M_R}{\partial \beta_i} = 0 \qquad (i=1..p)
+$$
+由于 $M_R$ 对 $\beta_1$ 求导时 $\beta_k, k \neq 1$ 都可以看作常数，对 $\beta_1$求导都为0，可证明式(6.14)仍然成立。
+
+## (b)
+
+仍然取 $y_1 = 9, \lambda = 2$，则以 $\beta_1$ 为自变量的 $M_L$ 曲线为：
+```{r}
+y1 <- 9
+lambda <- 2
+beta_hat <- y1 - lambda / 2  # based on equation (6.15)
+beta <- seq(beta_hat - 0.5, beta_hat + 0.5, by = 0.05)
+ML <- (y1 - beta)^2 + lambda * beta
+plot(beta, ML, type = 'l')
+points(beta_hat, min(ML), col = 'red')
+```
+
+证明式(6.15)：
+
+当 $p=1$ 时，式(6.13)展开为：
+$$
+M_L = y_1^2 - 2 y_1\beta_1 + \lambda \vert \beta_1 \vert + \beta_1^2 \\ =
+\begin{cases}
+y_1^2 + (\lambda - 2y_1) \beta_1 + \beta_1^2 & \text{when} \quad \beta_1 \ge 0 \\
+y_1^2 - (\lambda + 2y_1) \beta_1 + \beta_1^2 & \text{when} \quad \beta_1 \lt 0 \\
+\end{cases}
+$$
+当 $M_L$ 取最小值时其对 $\beta_1$ 的导数为0，代入上式得：
+$$
+\frac{\partial M_L}{\partial \beta_1} = 0 \\
+\begin{cases}
+\lambda - 2y_1 + 2 \beta_1 = 0 & \text{when} \quad \beta_1 \ge 0 \\
+-\lambda - 2y_1 + 2 \beta_1 = 0 & \text{when} \quad \beta_1 \lt 0 \\
+\end{cases} \\
+\therefore \beta_1 =
+\begin{cases}
+y_1 - \lambda/2 & \text{when} \quad \beta_1 \ge 0 \\
+y_1 + \lambda/2 & \text{when} \quad \beta_1 \lt 0 \\
+\end{cases} \\
+\to \beta_1 =
+\begin{cases}
+y_1 - \lambda/2 & \text{when} \quad y_1 \ge \lambda/2 \\
+y_1 + \lambda/2 & \text{when} \quad y_1 \lt - \lambda/2 \\
+\end{cases}
+$$
+
+但此处没有覆盖 $\vert y_1 \vert \lt \lambda / 2$ 时 $\beta_1$ 值如何计算，有待进一步分析。
+例如取 $y_1 = 1, \lambda = 4$，则以 $\beta_1$ 为自变量的 $M_L$ 曲线为：
+```{r}
+y1 <- 1
+lambda <- 4
+beta_hat <- 0  # based on equation (6.15), y_1 < \lambda / 2
+# beta <- seq(beta_hat - 0.5, beta_hat + 0.5, by = 0.05)
+beta_neg <- seq(-0.5, 0, by = 0.05)
+beta_pos <- seq(0, 0.5, by = 0.05)
+ML <- c(y1^2 - (lambda + 2 * y1) * beta_neg + beta_neg ^ 2, y1^2 + (lambda - 2 * y1) * beta_neg + beta_neg ^ 2)
+plot(c(beta_neg, beta_pos), ML, type = 'l')
+points(beta_hat, min(ML), col = 'red')
+```
+
+当 $p > 1$ 时，按同样的方法展开式(6.13)，并取：
+$$
+\frac{\partial M_L}{\partial \beta_i} = 0 \qquad (i=1..p)
+$$
+由于 $M_L$ 对 $\beta_1$ 求导时 $\beta_k, k \neq 1$ 都可以看作常数，对 $\beta_1$求导都为0，可证明式(6.15)仍然成立。
