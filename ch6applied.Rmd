@@ -1,0 +1,190 @@
+---
+title: "Applied Exercises of Chapter 6"
+output: html_notebook
+---
+
+# Question 8
+
+Generate test data:
+```{r}
+set.seed(1)
+x <- rnorm(100)
+eps <- rnorm(100)
+beta0 <- 2.731
+beta1 <- -3.296
+beta2 <- 5.117
+beta3 <- -1.793
+y <- beta0 + beta1 * x + beta2 * x^2 + beta3 * x^3 + eps
+plot(x, y)
+inp <- data.frame(x, y)
+```
+
+## (c) Fit with best subsets selection
+```{r}
+bss <- regsubsets(y ~ x + I(x^2) + I(x^3) + I(x^4) + I(x^5) + I(x^6) + I(x^7) + I(x^8) + I(x^9) + I(x^10), data = inp, nvmax = 10)
+bss.summary <- summary(bss)
+bss.summary
+
+par(mfrow=c(1,3))
+plot(bss.summary$adjr2, xlab = 'Number of variables', ylab = 'Adjusted R2', type = 'l')
+rsq.max.idx <- which.max(bss.summary$adjr2)
+points(rsq.max.idx, bss.summary$adjr2[rsq.max.idx], col = 'red', cex = 2, pch = 20)
+
+cp.min.idx <- which.min(bss.summary$cp)
+plot(bss.summary$cp, xlab = 'Number of variables', ylab = 'Cp', type = 'l')
+points(cp.min.idx, bss.summary$cp[cp.min.idx], col = 'red', cex = 2, pch = 20)
+
+bic.min.idx <- which.min(bss.summary$bic)
+plot(bss.summary$bic, xlab = 'Number of variables', ylab = 'BIC', type = 'l')
+points(bic.min.idx, bss.summary$bic[bic.min.idx], col = 'red', cex = 2, pch = 20)
+
+par(mfrow=c(1,1))
+plot(bss, scale = 'adjr2')
+plot(bss, scale = 'Cp')
+plot(bss, scale = 'bic')
+```
+According to adjusted $R^2$ and $C_p$, the best model contains 4 predictors: $X$, $X^2$, $X^3$ and $X^5$.
+According to BIC, the best model contains 3 predictors: $X$, $X^2$ and $X^3$.
+
+Get the coefficient estimates:
+```{r}
+coef(bss, 3)
+```
+The coefficient estimates vs origin coefficients:
+$$
+\beta_0 = 2.731 \quad \beta_1 = -3.296 \quad \beta_2 = 5.117 \quad \beta_3 = -1.793\\
+\hat\beta_0 = 2.793 \quad \hat\beta_1 = -3.321 \quad \hat\beta_2 = 4.993\quad \hat\beta_3 = -1.775
+$$
+
+## (d)
+Fit with forward stepwise selection method:
+```{r}
+fss <- regsubsets(y ~ x + I(x^2) + I(x^3) + I(x^4) + I(x^5) + I(x^6) + I(x^7) + I(x^8) + I(x^9) + I(x^10), data = inp, method = 'forward', nvmax = 10)
+fss.summary <- summary(fss)
+fss.summary
+
+par(mfrow=c(1,3))
+plot(fss.summary$adjr2, xlab = 'Number of variables', ylab = 'Adjusted R2', type = 'l')
+rsq.max.idx <- which.max(fss.summary$adjr2)
+points(rsq.max.idx, fss.summary$adjr2[rsq.max.idx], col = 'red', cex = 2, pch = 20)
+
+cp.min.idx <- which.min(fss.summary$cp)
+plot(fss.summary$cp, xlab = 'Number of variables', ylab = 'Cp', type = 'l')
+points(cp.min.idx, fss.summary$cp[cp.min.idx], col = 'red', cex = 2, pch = 20)
+
+bic.min.idx <- which.min(fss.summary$bic)
+plot(fss.summary$bic, xlab = 'Number of variables', ylab = 'BIC', type = 'l')
+points(bic.min.idx, fss.summary$bic[bic.min.idx], col = 'red', cex = 2, pch = 20)
+```
+According to adjusted $R^2$, the best model contains 5 predictors: $X$ ~ $X^5$.
+According to $C_p$, the best model contains 4 predictors: $X$, $X^2$, $X^3$ and $X^5$.
+According to BIC, the best model contains 3 predictors: $X$, $X^2$ and $X^3$.
+
+Fit with backward stepwise selection method:
+```{r}
+bks <- regsubsets(y ~ x + I(x^2) + I(x^3) + I(x^4) + I(x^5) + I(x^6) + I(x^7) + I(x^8) + I(x^9) + I(x^10), data = inp, method = 'backward', nvmax = 10)
+bks.summary <- summary(bks)
+bks.summary
+
+which.max(bks.summary$adjr2)
+which.min(bks.summary$cp)
+bks.summary$bic
+which.min(bks.summary$bic)
+
+par(mfrow=c(1,3))
+plot(bks.summary$adjr2, xlab = 'Number of variables', ylab = 'Adjusted R2', type = 'l')
+rsq.max.idx <- which.max(bks.summary$adjr2)
+points(rsq.max.idx, bks.summary$adjr2[rsq.max.idx], col = 'red', cex = 2, pch = 20)
+
+cp.min.idx <- which.min(bks.summary$cp)
+plot(bks.summary$cp, xlab = 'Number of variables', ylab = 'Cp', type = 'l')
+points(cp.min.idx, bks.summary$cp[cp.min.idx], col = 'red', cex = 2, pch = 20)
+
+bic.min.idx <- which.min(bks.summary$bic)
+plot(bks.summary$bic, xlab = 'Number of variables', ylab = 'BIC', type = 'l')
+points(bic.min.idx, bks.summary$bic[bic.min.idx], col = 'red', cex = 2, pch = 20)
+```
+The result is the same with forward stepwise selection methods.
+The results of forward/backward stepwise selection are basically the same with results of best subsets methods.
+
+Get the coefficient estimates (which is the same with results of best subsets method in section (c)):
+```{r}
+coef(fss, 3)
+coef(bks, 3)
+```
+
+### Use `I()` instead of `poly`
+```{r}
+fss.poly <- regsubsets(y ~ poly(x, 10), data = inp, method = 'forward', nvmax = 10)
+coef(fss.poly, 3)
+```
+So the wrong coefficient estimates show the `poly(x, 10)` is wrong here.
+
+## (e)
+Fit with lasso model:
+```{r}
+X <- data.frame(x, x^2, x^3, x^4, x^5, x^6, x^7, x^8, x^9, x^10)
+lasso.cv <- cv.glmnet(as.matrix(X), y, alpha = 1)
+plot(lasso.cv)
+lbl <- lasso.cv$lambda.min
+lasso.res <- glmnet(as.matrix(X), y, alpha = 1, lambda = lbl)
+lasso.res$beta
+lasso.res$a0
+```
+The coefficient estimates vs origin coefficients:
+$$
+\beta_0 = 2.731 \quad \beta_1 = -3.296 \quad \beta_2 = 5.117 \quad \beta_3 = -1.793\\
+\hat\beta_0 = 2.906 \quad \hat\beta_1 = -3.250 \quad \hat\beta_2 = 4.719 \quad \hat\beta_3 = -1.786
+$$
+
+## (f)
+
+Fit $Y = \beta_0 + \beta_7 X^7 + \epsilon$ with best subsets method:
+```{r}
+beta7 <- 7.697
+yf <- beta0 + beta7 * x^7 + eps
+
+bsf <- regsubsets(yf ~ x + I(x^2) + I(x^3) + I(x^4) + I(x^5) + I(x^6) + I(x^7) + I(x^8) + I(x^9) + I(x^10), data = inp, nvmax = 10)
+bsf.summary <- summary(bsf)
+bsf.summary
+
+par(mfrow=c(1,3))
+plot(bsf.summary$adjr2, xlab = 'Number of variables', ylab = 'Adjusted R2', type = 'l')
+rsq.max.idx <- which.max(bsf.summary$adjr2)
+points(rsq.max.idx, bsf.summary$adjr2[rsq.max.idx], col = 'red', cex = 2, pch = 20)
+
+cp.min.idx <- which.min(bsf.summary$cp)
+plot(bsf.summary$cp, xlab = 'Number of variables', ylab = 'Cp', type = 'l')
+points(cp.min.idx, bsf.summary$cp[cp.min.idx], col = 'red', cex = 2, pch = 20)
+
+bic.min.idx <- which.min(bsf.summary$bic)
+plot(bsf.summary$bic, xlab = 'Number of variables', ylab = 'BIC', type = 'l')
+points(bic.min.idx, bsf.summary$bic[bic.min.idx], col = 'red', cex = 2, pch = 20)
+```
+
+Compare the coefficients:
+```{r}
+coef(bsf, 1)
+```
+The coefficient estimates vs origin coefficients:
+$$
+\beta_0 = 2.731 \quad \beta_7 = 7.697 \\
+\hat\beta_0 = 2.690 \quad \hat\beta_1 = 7.698
+$$
+
+Fit with lasso:
+```{r}
+X <- data.frame(x, x^2, x^3, x^4, x^5, x^6, x^7, x^8, x^9, x^10)
+lasso.cv <- cv.glmnet(as.matrix(X), yf, alpha = 1)
+plot(lasso.cv)
+lbl <- lasso.cv$lambda.min
+lasso.res <- glmnet(as.matrix(X), yf, alpha = 1, lambda = lbl)
+lasso.res$beta
+lasso.res$a0
+```
+The coefficient estimates vs origin coefficients:
+$$
+\beta_0 = 2.731 \quad \beta_7 = 7.697 \\
+\hat\beta_0 = 3.734 \quad \hat\beta_1 = 7.436
+$$
+So for this model, the lasso give worse coefficients than best subsets.
