@@ -7,6 +7,7 @@ output: html_notebook
 
 Generate test data:
 ```{r}
+library(ISLR)
 set.seed(1)
 x <- rnorm(100)
 eps <- rnorm(100)
@@ -188,3 +189,80 @@ $$
 \hat\beta_0 = 3.734 \quad \hat\beta_1 = 7.436
 $$
 So for this model, the lasso give worse coefficients than best subsets.
+
+# Question 9
+
+(a) and (b): generate data set, fit with linear regression and calculate test error:
+```{r}
+set.seed(1)
+train <- sample(1: nrow(College), nrow(College)/2)
+test <- -train
+lr.fit <- lm(Apps ~ ., data = College)
+lr.pred <- predict(lr.fit, College[test, ])
+mean((lr.pred - College[test, ]$Apps) ^ 2)
+summary(lr.fit)
+```
+
+(c): fit with ridge regression and calculate test error:
+```{r}
+set.seed(1)
+inpx <- model.matrix(Apps ~ ., data = College)[, -1]
+inpy <- College$Apps
+cv.out <- cv.glmnet(inpx[train, ], inpy[train], alpha = 0)
+rr.fit <- glmnet(inpx[train, ], inpy[train], alpha = 0, lambda = cv.out$lambda.min)
+rr.pred <- predict(rr.fit, inpx[test, ], s = cv.out$lambda.min)
+mean((rr.pred - inpy[test]) ^ 2)
+```
+
+(d): fit with lasso, calculate the test error and show coefficient estimates:
+```{r}
+set.seed(1)
+cv.out <- cv.glmnet(inpx[train, ], inpy[train], alpha = 1)
+lasso.fit <- glmnet(inpx[train, ], inpy[train], alpha = 1, lambda = cv.out$lambda.min)
+lasso.pred <- predict(lasso.fit, inpx[test, ], s = cv.out$lambda.min)
+mean((lasso.pred - inpy[test]) ^ 2)
+coef(lasso.fit, 20)
+# predict(lasso.fit, type = 'coefficients', s = cv.out$lambda.min) product same results with above `coef` function
+```
+
+2 (*P.Undergrad* and *S. F. Ratio*) of 17 predictors are zeros.
+
+(e): fit with PCR and calculate the test error:
+```{r}
+library(pls)
+set.seed(1)
+pcr.fit <- pcr(Apps ~ ., data = College, subset = train, scale = TRUE, validation = 'CV')
+summary(pcr.fit)
+validationplot(pcr.fit, val.type = 'MSEP')
+pcr.pred <- predict(pcr.fit, inpx[test, ], ncomp = 5)
+mean((pcr.pred - inpy[test]) ^ 2)
+```
+When $M=5$, the test MSE is 1907827.
+
+(f): fit with PLS and calculate the test error:
+```{r}
+library(pls)
+set.seed(1)
+pls.fit <- plsr(Apps ~ ., data = College, subset = train, scale = TRUE, validation = 'CV')
+validationplot(pls.fit, val.type = 'MSEP')
+pls.pred <- predict(pls.fit, inpx[test, ], ncomp = 6)
+mean((pls.pred - inpy[test]) ^ 2)
+```
+When $M=6$, the test MSE is 1112189.
+
+(g): Compare the prediction accuracy with test $R^2$ of above models:
+```{r}
+test.avg.apps <- mean(inpy[test])
+
+lr.r2 <- 1 - mean((lr.pred - inpy[test])^2) / mean((test.avg.apps - inpy[test])^2)
+
+rr.r2 <- 1 - mean((rr.pred - inpy[test])^2) / mean((test.avg.apps - inpy[test])^2)
+
+lasso.r2 <- 1 - mean((lasso.pred - inpy[test])^2) / mean((test.avg.apps - inpy[test])^2)
+
+prc.r2 <- 1 - mean((pcr.pred - inpy[test])^2) / mean((test.avg.apps - inpy[test])^2)
+pls.r2 <- 1 - mean((pls.pred - inpy[test])^2) / mean((test.avg.apps - inpy[test])^2)
+
+barplot(c(lr.r2, rr.r2, lasso.r2, pcr.r2, pls.r2), col="gray", names.arg=c("LR", "Ridge", "Lasso", "PCR", "PLS"), main="Test R-squared")
+```
+For this data set, linear regression is the most accurate, while PCR give the worst prediction accuracy.
