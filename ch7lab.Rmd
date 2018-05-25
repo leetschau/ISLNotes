@@ -1,0 +1,104 @@
+---
+title: "Lab of Chapter 7"
+output: html_notebook
+---
+
+# 7.8.1 Polynomial Regression and Step Functions
+Fit with linear regression and orthogonal polynomials:
+```{r}
+library(ISLR)
+fit <- lm(wage ~ poly(age, 4), data = Wage)
+coef(summary(fit))
+```
+
+Fit with linear regression and raw polynomials:
+---
+```{r}
+library(ISLR)
+fit2 <- lm(wage ~ poly(age, 4, raw = TRUE), data = Wage)
+coef(summary(fit2))
+coef(fit2)    # same result with above command
+```
+
+Fit with linear regression and raw polynomials in another form of formula:
+```{r}
+fit2a <- lm(wage ~ age + I(age^2) + I(age^3) + I(age^4), data=Wage)
+coef(fit2a)
+```
+
+Fit with a formula based on `cbind()`:
+```{r}
+fit2b <- lm(wage ~ cbind(age, age^2, age^3, age^4), data=Wage)
+coef(fit2b)
+```
+
+Predict wage with age grid:
+```{r}
+age.range <- range(Wage$age)
+age.grid <- seq(from = age.range[1], to = age.range[2])
+preds <- predict(fit, list(age = age.grid), se = TRUE)
+se.bands <- cbind(preds$fit + 2* preds$se.fit, preds$fit - 2 * preds$se.fit)
+```
+
+Plot the data and add the fit from the degree-4 polynomial:
+```{r}
+par(mfrow = c(1, 2), mar = c(4.5, 4.5, 1, 1), oma = c(0, 0, 4, 0))
+plot(Wage$age, Wage$wage, xlim = age.range, cex = 0.5, col = "darkgrey")
+title("Degree-4 Polynomial ", outer = T)
+lines(age.grid, preds$fit, lwd = 2, col = "blue")
+matlines(age.grid, se.bands, lwd = 1, col = "blue", lty = 3)
+```
+
+No matter producing an orthogonal set of basis functions with the `poly()` function, or non-orthogonal with `I(x ^ n)`, the predicting result is the same:
+```{r}
+preds2 <- predict(fit2, list(age = age.grid), se = TRUE)
+max(abs(preds$fit - preds2$fit))
+```
+
+Find the best model with ANOVA:
+```{r}
+fit.1 <- lm(wage ~ age, data = Wage)
+fit.2 <- lm(wage ~ poly(age, 2), data = Wage)
+fit.3 <- lm(wage ~ poly(age, 3), data = Wage)
+fit.4 <- lm(wage ~ poly(age, 4), data = Wage)
+fit.5 <- lm(wage ~ poly(age, 5), data = Wage)
+anova(fit.1, fit.2, fit.3, fit.4, fit.5)
+```
+
+Hence, either a cubic or a quartic polynomial appear to provide a reasonable fit to the data, but lower- or higher-order models are not justified.
+
+Calculating p-value with only `poly()`:
+```{r}
+coef(summary(fit.5))
+```
+
+Notice that the p-values are the same.
+
+The ANOVA method works whether or not we used orthogonal polynomials; it also works when we have other terms in the model as well. For example, we can use anova() to compare these three models:
+```{r}
+fit.1 <- lm(wage ~ education + age, data = Wage)
+fit.2 <- lm(wage ~ education + poly(age, 2), data = Wage)
+fit.3 <- lm(wage ~ education + poly(age, 3), data = Wage)
+anova(fit.1, fit.2, fit.3)
+```
+
+Predicting whether an individual earns more than $250,000 per year:
+```{r}
+fit <- glm(I(wage > 250) ~ poly(age, 4), data = Wage, family = 'binomial')
+preds <- predict(fit, list(age = age.grid), se = TRUE)
+pfit <- exp(preds$fit) / (1 + exp(preds$fit))
+se.bands.logit <- cbind(preds$fit + 2 * preds$se.fit, preds$fit + 2 * preds$se.fit)
+se.bands <- exp(se.bands.logit) / (1 + exp(se.bands.logit))
+plot(Wage$age, I(Wage$age > 250), xlim = age.range, type = 'n', ylim = c(0, 0.2))
+points(jitter(Wage$age), I((Wage$wage > 250) / 5), cex = 0.5, pch = '|', col = 'darkgray')
+lines(age.grid, pfit, lwd = 2, col = 'blue')
+matlines(age.grid, se.bands, lwd = 1, col = 'blue', lty = 3)
+```
+
+Fit with a step function:
+```{r}
+table(cut(Wage$age, 4))
+fit <- lm(wage ~ cut(age, 4), data = Wage)
+coef(summary(fit))
+```
+
