@@ -102,3 +102,106 @@ fit <- lm(wage ~ cut(age, 4), data = Wage)
 coef(summary(fit))
 ```
 
+# 7.8.2 Splines
+
+Fit age to wage with cubic splines:
+```{r}
+library(splines)
+fit <- lm(wage ~ bs(age, knots = c(25, 40, 60)), data = Wage)
+preds <- predict(fit, list(age = age.grid), se = TRUE)
+plot(Wage$age, Wage$wage, col = 'gray')
+lines(age.grid, preds$fit, lwd = 2)
+lines(age.grid, preds$fit + 2 * preds$se, lty = 'dashed')
+lines(age.grid, preds$fit - 2 * preds$se, lty = 'dashed')
+```
+
+## 对 `bs()` 函数的说明
+`bs(x, knots = knots, degree = degree, intercept = TRUE, Boundary.knots = range(x))` 返回一个 `length(x)` 行 `length(knots) + degree + 1` 列矩阵，其中 `x` 是一维实数向量，例如 `seq(0, 3, by = 0.01)`（不需要按顺序排列），`knots` 是 处于 `x` 覆盖范围（例如`range(x)` 是 `[0, 3]`）内的一组叫做节点的实数（例如 `c(0.5, 1.7)`），它的每一列是一个样条 (spline) 函数，这组函数由 `range(x)` 和 knots 以及样条函数的次数 degree 唯一确定，每个样条都保证在节点处 `degree - 1` 阶导数连续，下面的代码演示了在 `[0, 3]` 区间上，包含 0.5, 1.7 两个节点的2次样条(由 $ax^2 + bx +c$ 描述)曲线（共5条）：
+```{r}
+degree <- 2
+x <- sample(seq(0, 3, by = 0.01))  # shuffle x to demonstrate the order (of x) is irrelevant
+iknots <- c(0.5, 1.7)
+
+par(mfrow = c(2, 3))
+ybs <- bs(x, knots = iknots, degree = degree, intercept = TRUE)
+ncol(ybs) == degree + length(iknots) + 1
+for (i in 1 : ncol(ybs)) {
+  plot(x, ybs[, i], ylab = 'y', main = paste('bs: deg =', degree, 'i = ', i))
+}
+```
+将 `degree` 改为1可以清晰的看到函数曲线在 0.5 和 1.7 保持了连续，随着 `degree` 的升高，节点处连续的导数升高，视觉效果越来越平滑。
+
+`bs()`函数生成的一组函数叫做 [B-spline Basis Functions](http://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-basis.html)，*basis function* 类似于向量空间中的基底向量，各阶函数的计算公式由 *Cox-de Boor recursion formula* 定义，这个公式的初始状态（0阶：$N_{i,0}(u)$）是节点分隔的各个子区间上的阶梯函数，每升一阶自变量 `u` 的阶次增加1，例如 $N_{i,3}(u)$ 是一个`u`的3次方多项式。
+上面的链接给出了 `[0, 3]` 区间上，包含 1, 2 两个节点的 0 次到 2 次 basis 函数的手工计算过程。
+
+下面的代码（基于 [A very short note on B-splines](https://www.stat.tamu.edu/~sinha/research/note1.pdf)）给出了 Cox-de Boor recursion formula 的 R 语言实现：
+```{r}
+basis <- function(x, degree, i, knots) {
+  if (degree == 0) {
+    if ((x < knots[i + 1]) & (x >= knots[i]))
+      y <- 1
+    else
+      y <- 0
+  } else {
+    if ((knots[degree+i] - knots[i]) == 0) {
+      temp1 <- 0
+    } else {
+      temp1 <- (x-knots[i]) / (knots[degree+i] - knots[i])
+    }
+    if ((knots[i + degree + 1] - knots[i + 1]) == 0) {
+      temp2 <- 0
+    } else {
+      temp2 <- (knots[i + degree + 1] - x) / (knots[i + degree + 1] - knots[i + 1])
+    }
+    y <- temp1 * basis(x, (degree - 1), i, knots) + temp2 * basis(x, (degree - 1), (i + 1), knots)
+  }
+  return(y)
+}
+
+newbs <- function(x, degree, inner.knots, Boundary.knots) {
+  Boundary.knots <- sort(Boundary.knots)
+  knots <- c(rep(Boundary.knots[1], (degree + 1)),
+             sort(inner.knots),
+             rep(Boundary.knots[2], (degree + 1)))
+  np <- degree + length(inner.knots) + 1
+  s <- rep(0, np)
+  if (x == Boundary.knots[2]) {
+    s[np] <- 1
+  } else {
+    for (i in 1 : np)
+      s[i] <- basis(x, degree, i, knots)
+  }
+  return(s)
+}
+
+lines <- degree + length(iknots) + 1
+par(mfrow = c(2, 3))
+y <- sapply(x, newbs, degree = degree, inner.knots = iknots, Boundary.knots = range(x))
+for (i in 1 : lines) {
+  plot(x, y[i, ], ylab = 'y', main = paste('newbs: deg =', degree, 'i = ', i))
+}
+```
+
+可以证明上述实现与 `bs()` 的计算结果一致：
+```{r}
+lines == ncol(ybs)
+max(t(ybs) - y) < 1e-10     # demonstrate y and ybs are the same
+```
+
+为什么 `bs()` 生成的函数组包含`length(knots) + degree + 1` 列，或者说自由度为`length(knots) + degree + 1`？
+
+
+一段 $d$ 阶样条曲线的自由度是 $(d + 1)$: $\beta_0 + \beta_1 x + \dots + \beta_d x^d$，$K$ 个节点将空间分为 $K+1$ 份，总自由度是 $(d+1) \times (K+1)$，同时在每个节点上有 $d$ 个约束（从 0 到 $d-1$ 阶导数相等），最终自由度是总自由度减去总约束数：
+$$
+(K + 1) \times (d + 1) - K \times d = K + d + 1
+$$
+
+所以7.4.2 节提到3阶样条函数的自由度是 $K + 4$：
+
+> In general, a cubic spline with K knots uses a total of 4 + K degrees of freedom.
+
+以及 7.4.3 节提到：
+
+> ... we perform least squares regression with an intercept and $3 + K$ predictors, of the form $X, X^2, X^3, h(X, \xi_1), h(X, \xi_2), \dots, h(X, \xi_K)$, where $\xi_1, \dots, \xi_K$ are the knots.
+
+这里 $K$ 就是 `length(iknots)`，`degree = 3`，1表示截距 （intercept）。
