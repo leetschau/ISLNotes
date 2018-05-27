@@ -104,7 +104,7 @@ coef(summary(fit))
 
 # 7.8.2 Splines
 
-Fit age to wage with cubic splines:
+Fit age to wage with cubic basis splines, and using a natural spline with 4 degree of freedom:
 ```{r}
 library(splines)
 fit <- lm(wage ~ bs(age, knots = c(25, 40, 60)), data = Wage)
@@ -113,7 +113,36 @@ plot(Wage$age, Wage$wage, col = 'gray')
 lines(age.grid, preds$fit, lwd = 2)
 lines(age.grid, preds$fit + 2 * preds$se, lty = 'dashed')
 lines(age.grid, preds$fit - 2 * preds$se, lty = 'dashed')
+
+fit2 <- lm(wage ~ ns(age, df = 4), data = Wage)
+preds2 <- predict(fit2, list(age = age.grid), se = TRUE)
+lines(age.grid, preds2$fit, col = 'red', lwd = 2)
 ```
+
+Fit with a smooth spline:
+```{r}
+plot(Wage$age, Wage$wage, xlim = age.range, cex = 0.5, col = 'darkgray')
+title("Smoothing Spline")
+fit <- smooth.spline(Wage$age, Wage$wage, df = 16)
+fit2 <- smooth.spline(Wage$age, Wage$wage, cv = TRUE)
+fit2$df
+lines(fit, col = 'red', lwd = 2)
+lines(fit2, col = 'blue', lwd = 2)
+legend("topright", legend = c("16 DF", "6.8 DF"), col = c('red', 'blue'), lty = 1, lwd =2, cex = 0.8)
+```
+
+Fit with local regression:
+```{r}
+plot(Wage$age, Wage$wage, xlim = age.range, cex = 0.5, col = 'darkgray')
+title('Local Regression')
+fit <- loess(wage ~ age, span = .2, data = Wage)
+fit2 <- loess(wage ~ age, span = .5, data = Wage)
+lines(age.grid, predict(fit, data.frame(age = age.grid)), col = 'red', lwd = 2)
+lines(age.grid, predict(fit2, data.frame(age = age.grid)), col = 'blue', lwd = 2)
+legend('topright', legend = c('Span = 0.2', 'Span = 0.5'), col = c('red', 'blue'), lty = 1, lwd = 2, cex = .8)
+```
+
+
 
 ## 对 `bs()` 函数的说明
 `bs(x, knots = knots, degree = degree, intercept = TRUE, Boundary.knots = range(x))` 返回一个 `length(x)` 行 `length(knots) + degree + 1` 列矩阵，其中 `x` 是一维实数向量，例如 `seq(0, 3, by = 0.01)`（不需要按顺序排列），`knots` 是 处于 `x` 覆盖范围（例如`range(x)` 是 `[0, 3]`）内的一组叫做节点的实数（例如 `c(0.5, 1.7)`），它的每一列是一个样条 (spline) 函数，这组函数由 `range(x)` 和 knots 以及样条函数的次数 degree 唯一确定，每个样条都保证在节点处 `degree - 1` 阶导数连续，下面的代码演示了在 `[0, 3]` 区间上，包含 0.5, 1.7 两个节点的2次样条(由 $ax^2 + bx +c$ 描述)曲线（共5条）：
@@ -205,3 +234,5 @@ $$
 > ... we perform least squares regression with an intercept and $3 + K$ predictors, of the form $X, X^2, X^3, h(X, \xi_1), h(X, \xi_2), \dots, h(X, \xi_K)$, where $\xi_1, \dots, \xi_K$ are the knots.
 
 这里 $K$ 就是 `length(iknots)`，`degree = 3`，1表示截距 （intercept）。
+
+
