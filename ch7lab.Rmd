@@ -235,4 +235,74 @@ $$
 
 这里 $K$ 就是 `length(iknots)`，`degree = 3`，1表示截距 （intercept）。
 
+# 7.8.3 GAMs
+
+Fit with natural splines and linear regression:
+```{r}
+gam1 <- lm(wage ~ ns(year, 4) + ns(age, 5) + education, data = Wage)
+summary(gam1)
+par(mfrow = c(1,3))
+plot.Gam(gam1, se = TRUE, col = 'red')
+```
+
+Note the function name is `plot.Gam()` instead of `plot.gam()`.
+
+Fit with smooth splines and linear regression:
+```{r}
+library(gam)
+gam.m3 <- gam(wage ~ s(year, 4) + s(age, 5) + education, data = Wage)
+par(mfrow = c(1,3))
+plot(gam.m3, se = TRUE, col = 'blue')
+```
+
+Compare 3 models:
+```{r}
+gam.m1 <- gam(wage ~ s(age, 5) + education, data = Wage)
+gam.m2 <- gam(wage ~ year + s(age, 5) + education, data = Wage)
+anova(gam.m1, gam.m2, gam.m3, test = "F")
+```
+
+To test if there is a non-linear relationship between a feature and the response variable:
+```{r}
+summary(gam.m3)
+```
+
+Note that the output here is different from the book (at the top of page 296).
+Here we judge the non-linear relationshop by p-values in section *Anova for Nonparametric Effects*. While this section is called *DF for Terms and F-values for Nonparametric Effects* in the book.
+
+Make predictions on the training set:
+```{r}
+preds <- predict(gam.m2, Wage)
+```
+
+Use local regression in a GAM:
+```{r}
+gam.lo <- gam(wage ~ s(year, df = 4) + lo(age, span = 0.7) + education, data = Wage)
+plot.Gam(gam.lo, se = TRUE, col = 'green')
+```
+
+Add interaction item with `lo()` before calling the `gam()`:
+```{r}
+gam.lo.i <- gam(wage ~ lo(year, age, span = 0.5) + education, data = Wage)
+library(akima)
+plot(gam.lo.i)
+```
+
+Fit a logistic regression GAM:
+```{r}
+gam.lr <- gam(I(wage > 250) ~ year + s(age, df = 5) + education, family = binomial, data = Wage)
+par(mfrow = c(1,1))
+plot(gam.lr, se = TRUE, col = 'green')
+```
+
+See the relationship between a qualitative feature and the response:
+```{r}
+table(Wage$education, I(Wage$wage > 250))
+```
+
+Fit a logistic regression GAM using all but a selected category:
+```{r}
+gam.lr.s <- gam(I(wage > 250) ~ year + s(age, df = 5) + education, family = binomial, data = Wage, subset = (education != "1. < HS Grad"))
+plot(gam.lr.s, se = TRUE, col = 'green')
+```
 
