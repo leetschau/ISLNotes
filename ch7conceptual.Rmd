@@ -58,3 +58,46 @@ f_2''(x) = 2c_2 + 6d_2 x \\
 $$
 
 # Question 2
+
+By definition, $\hat g(x)$ is always positive or zero.
+So in any scenario, $\hat g(x)$ is a curve which is as close to $y = 0$ as possible.
+
+(a): $\hat g(x) = 0$
+
+(b): $\hat g(x) = k$
+
+(c): $\hat g(x) = ax + b$
+
+(d): $\hat g(x) = ax^2 + bx + c$
+
+(e): when $\lambda = 0$, no matter what the value of $m$, $\hat g(x)$ is always the linear regression curve based on the $n$ points.
+
+# Question 3
+
+Take $b_1(X)$, $b_2(X)$, $\hat\beta_0$, $\hat\beta_1$, $\hat\beta_2$ into expression of $Y$, we have:
+$$
+Y = \begin{cases}
+1 + X & X \le 1 \\
+1 + X - 2 (X - 1)^2 & X > 1
+\end{cases}
+$$
+
+So the curve is as follows:
+```{r}
+x1 <- seq(-2, 1, by = 0.01)
+x2 <- seq(1.01, 2, by = 0.01)
+y1 <- 1 + x1
+y2 <- 1 + x2 - 2 * (x2 -1) ^ 2
+plot(c(x1, x2), c(y1, y2), type = 'l')
+points(-2, -1, col = 'red', pch = 19)
+points(1, 2, col = 'red', pch = 19)
+points(2, 1, col = 'red', pch = 19)
+```
+
+Or more simple:
+```{r}
+x <- seq(-2, 2, by = 0.1)
+y <- 1 + x - 2 * (x - 1) ^ 2 * I(x > 1)
+plot(x, y, type = 'l')
+```
+
