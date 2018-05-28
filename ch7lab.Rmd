@@ -242,6 +242,7 @@ Fit with natural splines and linear regression:
 gam1 <- lm(wage ~ ns(year, 4) + ns(age, 5) + education, data = Wage)
 summary(gam1)
 par(mfrow = c(1,3))
+library(gam)
 plot.Gam(gam1, se = TRUE, col = 'red')
 ```
 
@@ -249,7 +250,6 @@ Note the function name is `plot.Gam()` instead of `plot.gam()`.
 
 Fit with smooth splines and linear regression:
 ```{r}
-library(gam)
 gam.m3 <- gam(wage ~ s(year, 4) + s(age, 5) + education, data = Wage)
 par(mfrow = c(1,3))
 plot(gam.m3, se = TRUE, col = 'blue')
