@@ -1,0 +1,110 @@
+---
+title: "Applied Exercises of Chapter 7"
+output: html_notebook
+---
+
+# Question 6
+
+## (a)
+
+```{r}
+library(ISLR)
+library(boot)
+set.seed(1)
+degree <- 10
+cv.errs <- rep(NA, degree)
+for (i in 1:degree) {
+  fit <- glm(wage ~ poly(age, i), data = Wage)
+  cv.errs[i] <- cv.glm(Wage, fit)$delta[1]
+}
+```
+Plot the test MSE by the degrees:
+```{r}
+plot(1:degree, cv.errs, xlab = 'Degree', ylab = 'Test MSE', type = 'l')
+deg.min <- which.min(cv.errs)
+points(deg.min, cv.errs[deg.min], col = 'red', cex = 2, pch = 19)
+```
+
+The minimum of test MSE at the degree 9. But test MSE of degree 4 is small enough.
+The comparison by ANOVA (`anova(fit.1,fit.2,fit.3,fit.4,fit.5)`, on page 290, section 7.8.1) suggests degree 4 is enough.
+
+Predict with 3 degree model:
+```{r}
+plot(wage ~ age, data = Wage, col = "darkgrey")
+age.range <- range(Wage$age)
+age.grid <- seq(from = age.range[1], to = age.range[2])
+fit <- lm(wage ~ poly(age, 3), data = Wage)
+preds <- predict(fit, newdata = list(age = age.grid))
+lines(age.grid, preds, col = "red", lwd = 2)
+```
+
+## (b)
+
+```{r}
+cv.errs <- rep(NA, degree)
+for (i in 2:degree) {
+  Wage$age.cut <- cut(Wage$age, i)
+  fit <- glm(wage ~ age.cut, data = Wage)
+  cv.errs[i] <- cv.glm(Wage, fit)$delta[1]
+}
+plot(2:degree, cv.errs[-1], xlab = 'Cuts', ylab = 'Test MSE', type = 'l')
+deg.min <- which.min(cv.errs)
+points(deg.min, cv.errs[deg.min], col = 'red', cex = 2, pch = 19)
+```
+
+So 8 cuts produce minimum test MSE.
+
+Predict with 8-cuts step function:
+```{r}
+plot(wage ~ age, data = Wage, col = "darkgrey")
+fit <- glm(wage ~ cut(age, 8), data = Wage)
+preds <- predict(fit, data.frame(age = age.grid))  # both `data.frame` and `list` work
+lines(age.grid, preds, col = "red", lwd = 2)
+```
+
+Understand the `cut()` function:
+```{r}
+res <- cut(c(1,5,2,3,8), 2)
+res
+length(res)
+class(res[1])
+```
+
+`cut(x, k)` acts like *bin* or *binage*, turning a continuous quantitative variable into a discrete qualitative variable, by deviding the range of `x` evenly into `k` intervals.
+Each interval is called a *level*.
+The output of `cut(x, k)` is a vector with the same length of `x`.
+Each element of output (a *factor* object) is a *level* where the corresponding input element falls in.
+
+# Question 7
+
+See introductions about regression on qulitative predictors in section 3.3.1 and 3.6.6.
+
+Use `summary()`
+```{r}
+set.seed(1)
+summary(Wage$maritl)
+# table(Wage$maritl) the same with `summary`
+summary(Wage$jobclass)
+par(mfrow = c(1, 2))
+plot(Wage$maritl, Wage$wage)
+plot(Wage$jobclass, Wage$wage)
+```
+
+Fit wage on multiple predictors with GAM:
+```{r}
+library(gam)
+fit1 <- gam(wage ~ lo(year, span = 0.7) + s(age, 5) + education, data = Wage)
+fit2 <- gam(wage ~ lo(year, span = 0.7) + s(age, 5) + education + jobclass, data = Wage)
+fit3 <- gam(wage ~ lo(year, span = 0.7) + s(age, 5) + education + maritl, data = Wage)
+fit4 <- gam(wage ~ lo(year, span = 0.7) + s(age, 5) + education + jobclass + maritl, data = Wage)
+anova(fit1, fit2, fit3, fit4)
+```
+
+So model *fit4* fits the best.
+
+Plot the model:
+```{r}
+par(mfrow = c(2, 2))
+plot(fit3, se = T, col = "blue")
+```
+
