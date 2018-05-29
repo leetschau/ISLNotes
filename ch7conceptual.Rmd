@@ -101,3 +101,19 @@ y <- 1 + x - 2 * (x - 1) ^ 2 * I(x > 1)
 plot(x, y, type = 'l')
 ```
 
+# Question 4
+
+Take $b_1$, $b_2$ and $\beta_0, \dots, \beta_2$ into expression of $Y$:
+```{r}
+x <- -2 : 2
+y <- 1 + I(x >= 0 & x <= 2) - (x - 1) * I(x >=1 & x <= 2) + 3 * (x - 3) * I(x >= 3 & x <= 4) + 3 * I(x > 4 & x <= 5)
+plot(x, y, type = 'l')
+```
+
+# Question 5
+
+(a): As $\lambda \to \infty$, $\hat g_2$ has smaller training RSS, because it's more flexible than $\hat g_1$.
+
+(b): As $\lambda \to \infty$, when there's no overfit, $\hat g_2$ has smaller test RSS than $\hat g_1$. Otherwise $\hat g_1$ has smaller test RSS than $\hat g_2$.
+
+(c): When $\lambda = 0$, $\hat g_1 = \hat g_2$. So they have same RSS on training and test data set.
