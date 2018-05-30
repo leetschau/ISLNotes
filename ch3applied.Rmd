@@ -1,5 +1,5 @@
 ---
-title: "Exercise Applied in Chapter 3 of ISL"
+title: "Applied Exercises in Chapter 3 of ISL"
 output: html_notebook
 ---
 

@@ -168,3 +168,117 @@ So the conclusion of relationships with *mpg*:
 mpg ~ displacement: cubic;
 mpg ~ horsepower: cubic;
 mpg ~ weight: linear.
+
+# Question 9
+
+This question uses the variables *dis* (the weighted mean of distances to five Boston employment centers) and *nox* (nitrogen oxides concentration in parts per 10 million) from the *Boston* data. We will treat *dis* as the predictor and *nox* as the response.
+
+## (a)
+
+Use the `poly()` function to fit a cubic polynomial regression to predict *nox* using *dis*. Report the regression output, and plot the resulting data and polynomial fits.
+
+```{r}
+library(MASS)
+fit <- lm(nox ~ poly(dis, 3), data = Boston)
+summary(fit)
+dis.grid <- seq(min(Boston$dis), max(Boston$dis), by = 0.1)
+preds <- predict(fit, list(dis = dis.grid), se = TRUE)
+se.bands <- cbind(preds$fit + 2* preds$se.fit, preds$fit - 2 * preds$se.fit)
+plot(nox ~ dis, data = Boston, col = "darkgrey")
+lines(dis.grid, preds$fit, lwd = 2, col = "red")
+matlines(dis.grid, se.bands, lwd = 1, col = "red", lty = 3)
+```
+
+Another way to plot the fit:
+```{r}
+preds <- predict(fit, list(dis = dis.grid))
+plot(nox ~ dis, data = Boston, col = "darkgrey")
+lines(dis.grid, preds, col = "red", lwd = 2)
+```
+
+Yet another way to plot the fit:
+```{r}
+plot(Boston$dis, Boston$nox)
+points(Boston$dis, fit$fitted.values, col = 'red')
+```
+
+## (b)
+
+Plot the polynomial fits for a range of different polynomial degrees (say, from 1 to 10), and report the associated residual sum of squares.
+
+```{r}
+rss <- rep(NA, 10)
+for (i in 1:10) {
+  fit <- lm(nox ~ poly(dis, i), data = Boston)
+  rss[i] <- sum(fit$residuals ^ 2)
+}
+plot(1:10, rss, type = 'l', xlab = "Degree", ylab = "RSS")
+```
+
+## (c)
+
+Perform cross-validation or another approach to select the optimal degree for the polynomial, and explain your results.
+
+```{r}
+testMSE <- rep(NA, 10)
+for (i in 1:10) {
+  fit <- glm(nox ~ poly(dis, i), data = Boston)
+  testMSE[i] <- cv.glm(Boston, fit, K = 10)$delta[1]
+}
+plot(1:10, testMSE, type = 'l', xlab = "Degree", ylab = "Test MSE")
+points(which.min(testMSE), testMSE[which.min(testMSE)], col = 'red', pch = 19)
+```
+
+So the optimal degree is 3.
+
+## (d)
+
+Use the `bs()` function to fit a regression spline to predict *nox* using *dis*. Report the output for the fit using four degrees of freedom. How did you choose the knots? Plot the resulting fit.
+
+```{r}
+library(splines)
+dof <- 4
+fit <- lm(nox ~ bs(dis, df = dof), data = Boston)
+attr(bs(Boston$dis, df = dof), "knots")
+
+preds <- predict(fit, list(dis = dis.grid), se = TRUE)
+se.bands <- cbind(preds$fit + 2* preds$se.fit, preds$fit - 2 * preds$se.fit)
+plot(nox ~ dis, data = Boston, col = "darkgrey")
+lines(dis.grid, preds$fit, lwd = 2, col = "red")
+matlines(dis.grid, se.bands, lwd = 1, col = "red", lty = 3)
+```
+
+For degree of freedom (*dof*) equals to the sum of the number of knots and degree, and the default degree is 3, there is 1 knot.
+
+## (e)
+
+Now fit a regression spline for a range of degrees of freedom, and plot the resulting fits and report the resulting RSS. Describe the results obtained.
+
+```{r}
+res <- c()
+df.range <- 3:16
+for (dof in df.range) {
+  fit <- lm(nox ~ bs(dis, df = dof), data = Boston)
+  res <- c(res, sum(fit$residuals ^ 2))
+}
+plot(df.range, res, type = 'l', xlab = 'degree of freedom', ylab = 'RSS')
+```
+
+From the results, `df = 10` is good enough.
+
+## (f)
+
+Perform cross-validation or another approach in order to select the best degrees of freedom for a regression spline on this data. Describe your results.
+
+```{r}
+res <- c()
+for (dof in df.range) {
+  fit <- glm(nox ~ bs(dis, df = dof), data = Boston)
+  testMSE <- cv.glm(Boston, fit, K = 10)$delta[1]
+  res <- c(res, testMSE)
+}
+plot(df.range, res, type = 'l', xlab = 'degree of freedom', ylab = 'Test MSE')
+points(which.min(res) + 2, res[which.min(res)], col = 'red', pch = 19)
+```
+
+According to test MSE, `df = 8` is a good choice.
