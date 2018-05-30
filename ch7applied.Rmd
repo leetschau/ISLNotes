@@ -104,7 +104,67 @@ So model *fit4* fits the best.
 
 Plot the model:
 ```{r}
-par(mfrow = c(2, 2))
-plot(fit3, se = T, col = "blue")
+par(mfrow = c(2, 3))
+plot(fit4, se = T, col = "blue")
 ```
 
+# Question 8
+
+There's no direct way to answer if there are nonlinear realtionships between any feature in the data set. We have to choose a feature as the response, some others as predictors. And investigate if the relationship between them is linear or not.
+
+Get the overall relationship between all pairs of the *Auto* data set:
+```{r}
+set.seed(1)
+pairs(Auto)
+```
+
+From the plot above we can see when using *mpg* as the response, there are clear relationships between it and *cylinders*, *displacement*, *horsepower*, *weight*. Now we will find out if they are nonlinear or not.
+
+```{r}
+fit <- lm(mpg ~ poly(cylinders, 2) + poly(displacement, 5) + poly(horsepower, 5) + poly(weight, 5), data = Auto)
+summary(fit)
+```
+
+The results show that there's no significant relationship between mpg and cylinders.
+There's weak relationship (p-value: 0.028) between mpg and displacement.
+There's strong quadratic relation between mpg and horsepower.
+There's strong linear relation between mpg and weight.
+
+Test the degree with ANOVA:
+```{r}
+anv1 <- gam(mpg ~ displacement + horsepower + weight, data = Auto)
+anv2 <- gam(mpg ~ displacement + s(horsepower, 2) + weight, data = Auto)
+anv3 <- gam(mpg ~ s(displacement, 5) + s(horsepower, 5) + s(weight, 5), data = Auto)
+anova(anv1, anv2, anv3, test = 'F')
+summary(anv3)
+par(mfrow=c(1,3))
+plot.Gam(anv3, se=TRUE, col="red")
+```
+
+According to plot of *anv3*, try quadratic with *displacement* and *horsepower*, linear with *weight*:
+```{r}
+anv4 <- gam(mpg ~ s(displacement, 3) + s(horsepower, 3) + weight, data = Auto)
+anova(anv4, anv3, test = 'F')
+par(mfrow=c(1,3))
+plot(anv4, se=TRUE, col="red")
+```
+
+So model *anv4* is good enough.
+
+Compare their test MSE:
+```{r}
+lm1 <- glm(mpg ~ displacement + horsepower + weight, data = Auto)
+lm2 <- glm(mpg ~ poly(displacement, 3) + poly(horsepower, 3) + weight, data = Auto)
+lm3 <- glm(mpg ~ poly(displacement, 5) + poly(horsepower, 5) + poly(weight, 5), data = Auto)
+
+cv.glm(Auto, lm1, K = 10)$delta[1]
+cv.glm(Auto, lm2, K = 10)$delta[1]
+cv.glm(Auto, lm3, K = 10)$delta[1]
+```
+
+The results also suggest model *lm2* (same with *anv4*) is good enough.
+
+So the conclusion of relationships with *mpg*:
+mpg ~ displacement: cubic;
+mpg ~ horsepower: cubic;
+mpg ~ weight: linear.
