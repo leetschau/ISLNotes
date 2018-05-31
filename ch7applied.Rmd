@@ -5,7 +5,12 @@ output: html_notebook
 
 # Question 6
 
+In this exercise, you will further analyze the *Wage* data set considered throughout this chapter.
+
 ## (a)
+
+Perform polynomial regression to predict wage using age . Use cross-validation to select the optimal degree d for the polynomial. What degree was chosen, and how does this compare to
+the results of hypothesis testing using ANOVA? Make a plot of the resulting polynomial fit to the data.
 
 ```{r}
 library(ISLR)
@@ -39,6 +44,8 @@ lines(age.grid, preds, col = "red", lwd = 2)
 ```
 
 ## (b)
+
+Fit a step function to predict wage using age , and perform cross-validation to choose the optimal number of cuts. Make a plot of the fit obtained.
 
 ```{r}
 cv.errs <- rep(NA, degree)
@@ -77,6 +84,9 @@ Each element of output (a *factor* object) is a *level* where the corresponding 
 
 # Question 7
 
+The *Wage* data set contains a number of other features not explored in this chapter, such as marital status (*maritl*), job class (*jobclass*), and others. Explore the relationships between some of these other predictors and *wage* , and use non-linear fitting techniques in order to fit flexible models to the data. Create plots of the results obtained,
+and write a summary of your findings.
+
 See introductions about regression on qulitative predictors in section 3.3.1 and 3.6.6.
 
 Use `summary()`
@@ -109,6 +119,8 @@ plot(fit4, se = T, col = "blue")
 ```
 
 # Question 8
+
+Fit some of the non-linear models investigated in this chapter to the *Auto* data set. Is there evidence for non-linear relationships in this data set? Create some informative plots to justify your answer.
 
 There's no direct way to answer if there are nonlinear realtionships between any feature in the data set. We have to choose a feature as the response, some others as predictors. And investigate if the relationship between them is linear or not.
 
@@ -282,3 +294,179 @@ points(which.min(res) + 2, res[which.min(res)], col = 'red', pch = 19)
 ```
 
 According to test MSE, `df = 8` is a good choice.
+
+# Question 10
+
+This question relates to the *College* data set.
+
+## (a)
+
+Split the data into a training set and a test set. Using out-of-state tuition as the response and the other variables as the predictors, perform forward stepwise selection on the training set in order
+to identify a satisfactory model that uses just a subset of the predictors.
+
+```{r}
+library(ISLR)
+library(leaps)
+train <- sample(1: nrow(College), nrow(College)/2)
+test <- -train
+fit <- regsubsets(Outstate ~ ., data = College, subset = train, method = 'forward')
+fit.summary <- summary(fit)
+fit.summary
+```
+
+List names of 6 predictors:
+```{r}
+coef(fit, id = 6)
+```
+
+## (b)
+
+Fit a GAM on the training data, using out-of-state tuition as the response and the features selected in the previous step as the predictors. Plot the results, and explain your findings.
+
+```{r}
+gam.mod <- gam(Outstate ~ Private + s(Room.Board, 5) + s(Terminal, 5) + s(perc.alumni, 5) + s(Expend, 5) + s(Grad.Rate, 5), data = College, subset = train)
+par(mfrow = c(2,3))
+plot(gam.mod, se = TRUE, col = 'blue')
+```
+
+Based on the shape of the fit curves, *Expend* and *Grad.Rate* are strong non-linear with the *Outstate*.
+
+## (c)
+
+Evaluate the model obtained on the test set, and explain the results obtained.
+
+```{r}
+preds <- predict(gam.mod, College[test, ])
+RSS <- sum((College[test, ]$Outstate - preds)^2) # based on equation (3.16)
+TSS <- sum((College[test, ]$Outstate - mean(College[test, ]$Outstate)) ^ 2)
+1 - (RSS / TSS)   # based on equation
+```
+
+The $R^2$ statistic on test set is 0.69.
+
+## (d)
+
+For which variables, if any, is there evidence of a non-linear relationship with the response?
+
+```{r}
+summary(gam.mod)
+```
+
+"Anova for Nonparametric Effects" shows *Expend* has strong non-linear relationshop with the *Outstate*. *Grad.Rate* and *PhD* have moderate non-linear relationship with the *Outstate*, which coincide with the result of (b).
+
+# Qustion 11
+
+In Section 7.7, it was mentioned that GAMs are generally fit using a backfitting approach. The idea behind backfitting is actually quite simple. We will now explore backfitting in the context of multiple linear regression.
+
+Suppose that we would like to perform multiple linear regression, but we do not have software to do so. Instead, we only have software to perform simple linear regression. Therefore, we take the following iterative approach: we repeatedly hold all but one coefficient estimate fixed at its current value, and update only that coefficient estimate using a simple linear regression. The process is continued until convergence—that is, until the coefficient estimates stop changing.
+
+We now try this out on a toy example.
+
+## (a) & (b)
+
+Generate a response $Y$ and two predictors $X_1$ and $X_2$, with $n = 100$.
+Initialize $\hat \beta_1$ to take on a value of your choice. It does not matter what value you choose.
+
+```{r}
+set.seed(1)
+y <- rnorm(100)
+x1 <- rnorm(100)
+x2 <- rnorm(100)
+beta1 <- 3.27
+```
+
+## (c)
+
+Keeping the $\hat \beta_1$ fixed, fit the model:
+$$
+Y - \hat\beta_1 X_1 = \beta_0 + \beta_2 X_2 + \epsilon
+$$
+
+```{r}
+a <- y - beta1 * x1
+beta2 <- lm(a ~ x2)$coef[2]
+```
+
+## (d)
+
+Keeping the $\hat \beta_2$ fixed, fit the model:
+$$
+Y - \hat\beta_2 X_2 = \beta_0 + \beta_1 X_1 + \epsilon
+$$
+
+```{r}
+a <- y - beta2 * x2
+beta1 <- lm(a ~ x1)$coef[2]
+```
+
+## (e)
+
+Write a for loop to repeat (c) and (d) 1,000 times. Report the estimates of $\hat \beta_0$, $\hat \beta_1$, and $\hat \beta_2$ at each iteration of the for loop.
+Create a plot in which each of these values is displayed, with $\hat \beta_0$, $\hat \beta_1$, and $\hat \beta_2$ each shown in a different color.
+
+```{r}
+iter <- 10
+df <- data.frame(0.0, 0.27, 0.0)
+names(df) <- c('beta0', 'beta1', 'beta2')
+for (i in 1:iter) {
+  beta1 <- df[nrow(df), 2]
+  a <- y - beta1 * x1
+  beta2 <- lm(a ~ x2)$coef[2]
+  a <- y - beta2 * x2
+  beta1 <- lm(a ~ x1)$coef[2]
+  beta0 <- lm(a ~ x1)$coef[1]
+  print(beta0)
+  print(beta1)
+  print(beta2)
+  df[nrow(df) + 1,] <- list(beta0, beta1, beta2)
+}
+```
+
+## (f)
+
+Compare your answer in (e) to the results of simply performing multiple linear regression to predict $Y$ using $X_1$ and $X_2$. Use the `abline()` function to overlay those multiple linear regression coefficient estimates on the plot obtained in (e).
+
+```{r}
+plot(df$beta0, col = 'red', type = 'l')
+lines(df$beta1, col = 'blue')
+lines(df$beta2, col = 'green')
+res <- coef(lm(y ~ x1 + x2))
+abline(h = res[1], col = 'darkred', lty = 2)
+abline(h = res[2], col = 'darkblue', lty = 2)
+abline(h = res[3], col = 'darkgreen', lty = 2)
+```
+
+The coefficients from iterations and multiple regression are exactly the same.
+
+## (g)
+
+On this data set, how many backfitting iterations were required in order to obtain a “good” approximation to the multiple regression coefficient estimates?
+
+For this data set, 3 iterations are enough to converge.
+
+# Question 12
+
+This problem is a continuation of the previous exercise. In a toy example with $p = 100$, show that one can approximate the multiple linear regressioncoefficient estimates by repeatedly performing simple linear regression in a backfitting procedure. How many backfitting iterations are required in order to obtain a “good” approximation to the multiple regression coefficient estimates? Create a plot to justify your answer.
+
+Step 1: give $\hat \beta_1, \dots, \hat \beta_{99}$ arbitrary initial values.
+
+Step 2: fit the model:
+$$
+Y - \hat\beta_1 X_1 - \dots - \hat\beta_{99} X_{99} = \beta_0 + \beta_{100} X_{100} + \epsilon
+$$
+So we have the values of $\hat \beta_0$ and $\hat \beta_{100}$.
+
+Step 3: with this new $\hat\beta_{100}$, fit the model:
+$$
+Y - \hat\beta_1 X_1 - \dots - \hat\beta_{98} X_{98} - \hat\beta_{100}X_{100} = \beta_0 + \beta_{99} X_{99} + \epsilon
+$$
+
+Repeat above step until fitting the model:
+$$
+Y - \hat\beta_2 X_2 - \dots - \hat\beta_{100}X_{100} = \beta_0 + \beta_{1} X_{1} + \epsilon
+$$
+
+So we have new values of $\hat \beta_0$ and $\hat \beta_1$.
+With this $\hat \beta_1$ fit the model in step 2 again.
+
+Repeat this loop until $\hat\beta_0, \dots, \hat\beta_{100}$ converge.
