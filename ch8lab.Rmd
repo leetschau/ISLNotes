@@ -1,0 +1,71 @@
+---
+title: "Lab of Chapter 8"
+output: html_notebook
+---
+
+# 8.3.1 Fitting Classification Trees
+
+```{r}
+library(tree)
+library(ISLR)
+High <- ifelse(Carseats$Sales > 8, 'Yes', 'No')
+Carseats <- data.frame(Carseats, High)
+```
+
+Fit a classification tree:
+```{r}
+tree.carseats <- tree(High ~ . - Sales, data = Carseats)
+summary(tree.carseats)
+plot(tree.carseats)
+text(tree.carseats, pretty = 0)
+tree.carseats
+```
+
+Step 1 of algorithm 8.1: split the observations into training and test data set and calculate test MSE of $T_0$:
+```{r}
+set.seed(2)
+train <- sample(1: nrow(Carseats), nrow(Carseats) / 2)
+Carseats.test <- Carseats[-train, ]
+High.test <- High[-train]
+tree.carseats <- tree(High ~ . - Sales, data = Carseats, subset = train)
+tree.pred <- predict(tree.carseats, Carseats.test, type = 'class')
+table(tree.pred, High.test)
+```
+
+The correct prediction rate:
+```{r}
+(86 + 57) / (86 + 57 + 30 + 27)
+```
+
+Pruning trees with cross-validation:
+```{r}
+set.seed(3)
+cv.carseats <- cv.tree(tree.carseats, FUN = prune.misclass)
+names(cv.carseats)
+cv.carseats
+```
+
+Plot the error rate as a function of both *size* and *k*:
+```{r}
+par(mfrow=c(1,2))
+plot(cv.carseats$size ,cv.carseats$dev ,type="b")
+plot(cv.carseats$k ,cv.carseats$dev ,type="b")
+```
+
+Here the y-axis *dev* corresponds to the cross-validation error rate.
+
+Step 4 of algorithm 8.1: prune the tree to obtain the nine-node tree:
+```{r}
+prune.carseats <- prune.misclass(tree.carseats, best = 9)
+plot(prune.carseats)
+text(prune.carseats, pretty = 0)
+```
+
+Calculate the correct test rate of the pruned tree:
+```{r}
+tree.pred <- predict(prune.carseats, newdata = Carseats.test, type = 'class')
+table(tree.pred, High.test)
+(94 + 60) / (94 + 60 + 22 + 24)
+```
+
+# 8.3.2 Fitting Regression Trees
