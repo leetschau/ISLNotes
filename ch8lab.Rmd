@@ -21,7 +21,7 @@ text(tree.carseats, pretty = 0)
 tree.carseats
 ```
 
-Step 1 of algorithm 8.1: split the observations into training and test data set and calculate test MSE of $T_0$:
+Step 1 of algorithm 8.1: split the observations into training and test data set, create the tree $T_0$ with function `tree()` and calculate test MSE of $T_0$:
 ```{r}
 set.seed(2)
 train <- sample(1: nrow(Carseats), nrow(Carseats) / 2)
@@ -37,12 +37,17 @@ The correct prediction rate:
 (86 + 57) / (86 + 57 + 30 + 27)
 ```
 
-Pruning trees with cross-validation:
+Step 2 and 3 of algorithem 8.1: create a series of subtrees of $T_0$ according to $\alpha$:
 ```{r}
 set.seed(3)
 cv.carseats <- cv.tree(tree.carseats, FUN = prune.misclass)
 names(cv.carseats)
 cv.carseats
+```
+
+Find the best node number whose prediction error is minimum:
+```{r}
+best.node.no <- cv.carseats$size[which.min(cv.carseats$dev)]
 ```
 
 Plot the error rate as a function of both *size* and *k*:
@@ -56,7 +61,7 @@ Here the y-axis *dev* corresponds to the cross-validation error rate.
 
 Step 4 of algorithm 8.1: prune the tree to obtain the nine-node tree:
 ```{r}
-prune.carseats <- prune.misclass(tree.carseats, best = 9)
+prune.carseats <- prune.misclass(tree.carseats, best = best.node.no)
 plot(prune.carseats)
 text(prune.carseats, pretty = 0)
 ```
@@ -69,3 +74,119 @@ table(tree.pred, High.test)
 ```
 
 # 8.3.2 Fitting Regression Trees
+
+Fit a regression tree on the *Boston* data set:
+```{r}
+library(MASS)
+set.seed(1)
+train <- sample(1: nrow(Boston), nrow(Boston) / 2)
+tree.boston <- tree(medv ~ ., data = Boston, subset = train)
+summary(tree.boston)
+plot(tree.boston)
+text(tree.boston, pretty = 0)
+```
+
+The tree predicts a median house price of \$46,380 for larger homes ($rm \ge 7.437$, more than 7 rooms per dwelling) in suburbs in which residents have high socioeconomic status ($lstat \lt 9.715$, percent of low status of the population（低端人口？）is less than 9.715%).
+
+Notice that there are only 3 predictors have been used in constructing the tree.
+While there are at least 6 predictors are strongly related with *medv* according to linear regression:
+```{r}
+summary(lm(medv ~ ., data = Boston, subset = train))
+```
+
+Fit with pruned tree:
+```{r}
+cv.boston <- cv.tree(tree.boston)
+plot(cv.boston$size, cv.boston$dev, type = 'b')
+prune.boston <- prune.tree(tree.boston, best = 5)
+plot(prune.boston)
+text(prune.boston, pretty = 0)
+```
+
+Compare predictions and actual data on the test data set and calculate the MSE:
+```{r}
+yhat <- predict(tree.boston, newdata = Boston[-train, ])
+boston.test <- Boston[-train, 'medv']
+plot(yhat, boston.test)
+abline(0, 1)
+mean((yhat - boston.test) ^ 2)
+```
+
+`abline(0, 1)` here means a line with intercept = 0 and slope = 1, which is $y = x$.
+
+# 8.3.3 Bagging and Random Forests
+
+Fit with bagging method (all predictors, in other words all columns but the response variable, are used at each split: `mtry = ncol(Boston) - 1`):
+```{r}
+library(randomForest)
+set.seed(1)
+bag.boston <- randomForest(medv ~ ., data = Boston, subset = train, mtry = ncol(Boston) - 1, importance = TRUE)
+bag.boston
+```
+
+Test MSE of the bagging method:
+```{r}
+yhat.bag <- predict(bag.boston, newdata = Boston[-train, ])
+plot(yhat.bag, boston.test)
+abline(0, 1)
+mean((yhat.bag - boston.test) ^ 2)
+```
+
+Bagging with more trees in the bag:
+```{r}
+bag.boston <- randomForest(medv ~ ., data = Boston, subset = train, mtry = ncol(Boston) - 1, ntree = 25)
+yhat.bag <- predict(bag.boston, newdata = Boston[-train, ])
+mean((yhat.bag - boston.test) ^ 2)
+```
+
+Fit with random forest (`mtry = 6`):
+```{r}
+set.seed(1)
+rf.boston <- randomForest(medv ~ ., data = Boston, subset = train, mtry = 6, importance = TRUE)
+yhat.rf <- predict(rf.boston, newdata = Boston[-train, ])
+mean((yhat.rf - boston.test) ^ 2)
+```
+
+So test MSE of random forest (11.66) and bagging (13.5) are both much less than that of single tree (25.05) in above section.
+
+Report the importance of each predictor:
+```{r}
+importance(rf.boston)
+varImpPlot(rf.boston)
+```
+
+The most import 3 predictor (*rm*, *lstat* and *dis*) are the same with the output of `summary(tree.boston)`.
+
+# 8.3.4 Boosting
+
+Fit with boosted regression trees:
+```{r}
+library(gbm)
+set.seed(1)
+boost.boston <- gbm(medv ~ ., data = Boston[train, ], distribution = 'gaussian', n.trees = 5000, interaction.depth = 4)
+summary(boost.boston)
+```
+
+Plot house price with 2 most important predictors:
+```{r}
+par(mfrow = c(1,2))
+plot(boost.boston, i = 'rm')
+plot(boost.boston, i = 'lstat')
+```
+
+Test MSE of the boosted model:
+```{r}
+yhat.boost <- predict(boost.boston, newdata = Boston[-train, ], n.trees = 5000)
+mean((yhat.boost - boston.test) ^ 2)
+```
+
+This is similar to random forest (11.66), and better than bagging (13.5).
+
+Fit with a different $\lambda$ (see equation (8.10) of algorithm 8.2 on page 322):
+```{r}
+boost.boston <- gbm(medv ~ ., data = Boston[train, ], distribution = 'gaussian', n.trees = 5000, interaction.depth = 4, shrinkage = 0.2, verbose = FALSE)
+yhat.boost <- predict(boost.boston, newdata = Boston[-train, ], n.trees = 5000)
+mean((yhat.boost - boston.test) ^ 2)
+```
+
+So in this case $\lambda = 0.2$ leads to a slightly lower test MSE than the default $\lambda$ (0.001).
