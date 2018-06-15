@@ -1,0 +1,20 @@
+---
+title: "Conceptual Exercises of Chapter 8"
+output: html_notebook
+---
+
+# Question 1
+
+```{r}
+x <- runif(100, 0, 10)
+y <- runif(100, 0, 10)
+z <- rnorm(100, 5, sqrt(5))
+scatterplot3d(x, y, z, main="3D Scatterplot")
+ztree <- tree(z ~ x + y)
+plot(ztree)
+text(ztree)
+ztree
+```
+
+# Question 2
+
