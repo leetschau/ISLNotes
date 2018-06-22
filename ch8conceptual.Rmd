@@ -6,6 +6,8 @@ output: html_notebook
 # Question 1
 
 ```{r}
+library(scatterplot3d)
+library(tree)
 x <- runif(100, 0, 10)
 y <- runif(100, 0, 10)
 z <- rnorm(100, 5, sqrt(5))
@@ -18,3 +20,91 @@ ztree
 
 # Question 2
 
+怎样证明每一轮迭代中，特征 $f_i$ 不会被多次作为分隔标准？
+如果能够证明这一点，加法模型就可以得到证明。
+
+# Question 3
+
+```{r}
+pm1 <- seq(0, 1, by = 0.01)
+pm2 <- 1 - pm1
+class.err <- 1 - pmax(pm1, pm2)
+G <- pm1 * (1 - pm1) + pm2 * (1 - pm2)
+D <- -1 * (pm1 * log(pm1) + pm2 * log(pm2))
+plot(pm1, class.err, type = 'l', col = 'red', ylim = c(0, 0.7))
+lines(pm1, G, type = 'l', col = 'blue')
+lines(pm1, D, type = 'l', col = 'darkgreen')
+legend("topright", legend = c("Classification Error", "Gini index", 'Cross Entropy'), col = c('red', 'blue', 'darkgreen'), lty = 1, lwd =2, cex = 0.8)
+```
+
+# Question 4
+
+## 4.a
+
+If X1 >= 1:
+    5
+else:
+    if X2 >= 1:
+        15
+    else:
+        if X1 < 0:
+            3
+        else:
+            if X2 >= 0:
+                0
+            else:
+                10
+
+## 4.b
+
+```{r}
+par(xpd = NA)
+plot(NA, NA, type = "n", xlim = c(-1, 2), ylim = c(0, 3), xlab = "X1", ylab = "X2")
+# X2 < 1
+lines(x = c(-1, 2), y = c(1, 1))
+# X1 < 1 with X2 < 1
+lines(x = c(1, 1), y = c(0, 1))
+text(x = 0, y = 0.5, labels = c(-1.80))
+text(x = 1.5, y = 0.5, labels = c(0.63))
+# X2 < 2 with X2 >= 1
+lines(x = c(-1, 2), y = c(2, 2))
+text(x = 0.5, y = 2.5, labels = c(2.49))
+# X1 < 0 with X2<2 and X2>=1
+lines(x = c(0, 0), y = c(1, 2))
+text(x = -0.5, y = 1.5, labels = c(-1.06))
+text(x = 1, y = 1.5, labels = c(0.21))
+```
+
+# Question 5
+
+```{r}
+p <- c(0.1, 0.15, 0.2, 0.2, 0.55, 0.6, 0.6, 0.65, 0.7, 0.75)
+maj.vote <- 'Green'
+if (sum(p > 0.5) > length(p)/2) {
+  maj.vote <- 'Red'
+}
+maj.vote
+avg.prob <- 'Green'
+if (mean(p) > 0.5) {
+  avg.prob <- 'Red'
+}
+avg.prob
+```
+
+# Question 6
+
+以下内容引自笔记：
+
+1. 按照式 (8.2) 和 (8.3) 所述过程生成最大回归树 $T_0$，直到所有节点包含的观测数小于某个阈值时停止（由于新节点只会在层数最深的节点上出现，在树的生长过程中，浅层节点中的观测数量不变，所以用“观测数小于阈值”作为算法停止的标准，可能导致算法无法结束，应该用 information gain 是否大于零作为迭代终止条件）；
+1. 对 $T_0$ 的每个子树，设式 (8.4) 的值为 $RN$，得到函数 $RN = f(\alpha)$（下面 *子树示例* 一节给出了包含3棵子树的例子）；
+1. 使用 K-fold cross-validation 确定 $\alpha$ 的值：将完整训练数据分为 $K$ 份，对于每一个 $k = 1, \dots, K$，执行下面的处理，共执行 $K$ 次，得到 $RN_1(\alpha), \dots, RN_K(\alpha)$，取平均值得到 $\bar{RN}(\alpha)$，取 $\bar{RN}$ 的最小值对应的 $\alpha$ 作为 $\alpha$ 的最优解：
+
+    i. 用除了第 $k$ 份的 $K-1$ 份数据作为训练集完成第1、2步；
+    
+    i. 将第 $k$ 份作为测试数据，计算本轮的test MSE ($RN_k(\alpha)$)；
+    
+1. 将上面确定的 $\alpha$ 值，根据第2步中最小 $RN$ 对应的子树作为最终结果。
+
+在回归树的生成过程中，$\alpha$ 通过改变 $RN$ 的值生成不同的子树，不（直接）参与此子树的 test MSE 的计算。
+
+回归树的Python实现参考 [treepredict.py](https://github.com/leetschau/Programming-Collective-Intelligence/blob/master/chapter7/treepredict.py)。
