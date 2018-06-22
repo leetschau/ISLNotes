@@ -1,0 +1,57 @@
+---
+title: "Applied Exercises of Chapter 8"
+output: html_notebook
+---
+
+# Question 7
+
+In the lab, we applied random forests to the *Boston* data using `mtry=6` and using `ntree=25` and `ntree=500`. Create a plot displaying the test error resulting from random forests on this data set for a more comprehensive range of values for `mtry` and `ntree`. You can model your
+plot after Figure 8.10. Describe the results obtained.
+
+```{r}
+library(MASS)
+library(randomForest)
+set.seed(1)
+train <- sample(1: nrow(Boston), nrow(Boston) / 2)
+boston.test <- Boston[-train, 'medv']
+p <- ncol(Boston) - 1
+
+tree.nos <- c(1, 2, 3, 4, seq(5, 500, by = 5))
+
+rf.gen.err <- function(tree.no, feature.no) {
+  rf.boston <- randomForest(medv ~ ., data = Boston, subset = train, 
+                            mtry = feature.no, ntree = tree.no, importance = TRUE)
+  yhat.rf <- predict(rf.boston, newdata = Boston[-train, ])
+  mean((yhat.rf - boston.test) ^ 2)
+}
+
+err.full <- sapply(tree.nos, rf.gen.err, feature.no = p)
+err.half <- sapply(tree.nos, rf.gen.err, feature.no = round(p/2))
+err.sqrt <- sapply(tree.nos, rf.gen.err, feature.no = round(sqrt(p)))
+```
+
+Plot the errors with different feature numbers and tree numbers:
+```{r}
+plot(tree.nos, err.full, type = 'l', col = 'red', ylim = c(10, 24.5), xlab = 'Number of trees', ylab = 'Test MSE')
+lines(tree.nos, err.half, type = 'l', col = 'blue')
+lines(tree.nos, err.sqrt, type = 'l', col = 'darkgreen')
+legend("topright", legend = c("m=p", "m=p/2", 'm=sqrt(p)'), col = c('red', 'blue', 'darkgreen'), lty = 1, lwd =2, cex = 0.8)
+```
+
+Get the errors from the function itself:
+```{r}
+Boston.train <- Boston[train, -14]
+Boston.test <- Boston[-train, -14]
+Y.train <- Boston[train, 14]
+Y.test <- Boston[-train, 14]
+rf.boston.full <- randomForest(Boston.train, y = Y.train, xtest = Boston.test, ytest = Y.test, mtry = ncol(Boston) - 1, ntree = 500)
+rf.boston.half <- randomForest(Boston.train, y = Y.train, xtest = Boston.test, ytest = Y.test, mtry = (ncol(Boston) - 1) / 2, ntree = 500)
+rf.boston.sqrt <- randomForest(Boston.train, y = Y.train, xtest = Boston.test, ytest = Y.test, mtry = sqrt(ncol(Boston) - 1), ntree = 500)
+plot(1:500, rf.boston.full$test$mse, col = "red", type = "l", xlab = "Number of Trees", ylab = "Test MSE", ylim = c(10, 19))
+lines(1:500, rf.boston.half$test$mse, col = "blue", type = "l")
+lines(1:500, rf.boston.sqrt$test$mse, col = "darkgreen", type = "l")
+legend("topright", c("m = p", "m = p/2", "m = sqrt(p)"), col = c("red", "blue", "darkgreen"), cex = 1, lty = 1)
+```
+
+For feature numbers, half (blue) and square root (dark green) of all predictors are almost the same.
+They are both better than using all features.
