@@ -55,3 +55,76 @@ legend("topright", c("m = p", "m = p/2", "m = sqrt(p)"), col = c("red", "blue", 
 
 For feature numbers, half (blue) and square root (dark green) of all predictors are almost the same.
 They are both better than using all features.
+
+# Question 8
+
+In the lab, a classification tree was applied to the *Carseats* data set after converting *Sales* into a qualitative response variable. Now we will seek to predict *Sales* using regression trees and related approaches, treating the response as a quantitative variable.
+
+(a) and (b): build a complete regression tree on training set of *Carseats* and calculate its test MSE:
+```{r}
+library(ISLR)
+library(tree)
+set.seed(1)
+train <- sample(1 : nrow(Carseats), nrow(Carseats) / 2)
+tree.carseats <- tree(Sales ~ ., data = Carseats, subset = train)
+plot(tree.carseats)
+text(tree.carseats, pretty = 0)
+tree.pred <- predict(tree.carseats, Carseats[-train, ])
+mean((Carseats[-train, 'Sales'] - tree.pred) ^ 2)
+```
+
+The test MSE of complete regression tree is 4.15.
+
+(c): build a pruning tree on training set and calculate its test MSE:
+```{r}
+set.seed(1)
+cv.carseats <- cv.tree(tree.carseats, FUN = prune.tree)
+tree.min <- which.min(cv.carseats$dev)
+best.node.no <- cv.carseats$size[tree.min]
+
+prune.carseats <- prune.tree(tree.carseats, best = best.node.no)
+tree.pred <- predict(prune.carseats, Carseats[-train, ])
+mean((Carseats[-train, 'Sales'] - tree.pred) ^ 2)
+```
+
+The test MSE of pruning tree is higher than complete tree.
+So pruning the tree doesn't prove the test MSE.
+
+Note: use `prune.misclass` for pruning the classification tree, `prune.tree` for regression tree.
+
+Plot the node number and pruning tree:
+```{r}
+plot(cv.carseats$size, cv.carseats$dev, type = "b")
+points(best.node.no, cv.carseats$dev[tree.min], col = "red", cex = 2, pch = 20)
+plot(prune.carseats)
+text(prune.carseats, pretty = 0)
+```
+
+(d): calculate the test MSE with bagging approach:
+```{r}
+library(randomForest)
+set.seed(1)
+bag.carseats <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = ncol(Carseats) - 1, importance = TRUE)
+yhat.bag <- predict(bag.carseats, newdata = Carseats[-train, ])
+mean((yhat.bag - Carseats[-train, 'Sales']) ^ 2)
+```
+
+The test MSE is 2.615.
+The importance of predictors:
+```{r}
+importance(bag.carseats)
+```
+
+So the most 2 important predictors are: *Price* and *ShelveLoc*.
+
+(e): Calculate test MSE with random forests and different parameter *m*:
+```{r}
+rf.carseats <- randomForest(Sales ~ ., data = Carseats, subset = train, importance = TRUE)
+yhat.rf <- predict(rf.carseats, Carseats[-train, ])
+mean((yhat.rf - Carseats[-train, 'Sales']) ^ 2)
+importance(rf.carseats)
+```
+
+The default *m* for a regression problem is $p/3$, where *p* is number of predictors. In this setting, the test MSE is 3.321, higher than bagging method, lower than complete and pruning regression tree.
+
+The most 2 important predictors are the same with bagging method above: *Price* and *ShelveLoc*.
