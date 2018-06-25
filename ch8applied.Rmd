@@ -128,3 +128,103 @@ importance(rf.carseats)
 The default *m* for a regression problem is $p/3$, where *p* is number of predictors. In this setting, the test MSE is 3.321, higher than bagging method, lower than complete and pruning regression tree.
 
 The most 2 important predictors are the same with bagging method above: *Price* and *ShelveLoc*.
+
+# Question 9
+
+(a) and (b): Split the OJ data set for training and test, and fit a classification tree.
+Note that there is no *Buy* feature in this data set.
+```{r}
+library(ISLR)
+library(tree)
+set.seed(1)
+train <- sample(1 : nrow(OJ), 800)
+oj.train <- OJ[train, ]
+oj.test <- OJ[-train, ]
+oj.tree <- tree(Purchase ~ ., OJ, subset = train)
+summary(oj.tree)
+```
+
+There are 4 features used in tree construction: "LoyalCH", "PriceDiff", "SpecialCH", "ListPriceDiff".
+The error rate on training set is 0.165. The number of terminal nodes is 8.
+
+(c): Type in the name of the tree object in order to get a detailed text output. Pick one of the terminal nodes, and interpret the information displayed.
+
+```{r}
+oj.tree
+```
+
+As an example, terminal node no. 20 contains 70 observations, whose *LoyalCH* feature is in range [0.264232, 0.508643], and *PriceDiff* less than 0.195, and *SpecialCH* less than 0.5. The $Y$ of this node is *MM*, which means purchases in this node are all "Minute Maid" orange juice bought by customers. In this node, 15.714% of $Y$ are "CH", and 84.286% of $Y$ are "MM".
+
+What does *deviance* in the output mean?
+How does the *deviance* of node 20 (60.89) is calculated?
+
+(d): Create a plot of the tree, and interpret the results.
+```{r}
+plot(oj.tree)
+text(oj.tree)
+```
+
+(e): Predict the response on the test data, and produce a confusion matrix comparing the test labels to the predicted test labels. What is the test error rate?
+
+```{r}
+oj.pred <- predict(oj.tree, oj.test, type = 'class')
+table(oj.pred, oj.test$Purchase)
+```
+
+The test error rate is:
+```{r}
+(12 + 49) / (147 + 49 + 12 + 62)
+```
+
+(f): Apply the `cv.tree()` function to the training set in order to determine the optimal tree size.
+```{r}
+oj.cv <- cv.tree(oj.tree, FUN = prune.misclass)
+oj.cv
+```
+
+The optimal tree size is 2, which has the same *dev* value (156) of the tree with 8 nodes.
+*dev* means cross-validated classification error rate of the tree.
+
+(g) and (h): Produce a plot with tree size on the x-axis and cross-validated classification error rate on the y-axis.
+
+```{r}
+plot(oj.cv$size, oj.cv$dev, xlab="Size of the Tree", ylab="CV error rate", type = "b")
+points(2, oj.cv$dev[2], col = "red", cex = 2, pch = 20)
+```
+
+Tree size 2, 5 and 8 have the same cross-validation classification error rate.
+
+(i): Produce a pruned tree corresponding to the optimal tree size obtained using cross-validation. If cross-validation does not lead to selection of a pruned tree, then create a pruned tree with five terminal nodes.
+
+```{r}
+oj.pruned <- prune.misclass(oj.tree, best = 2)
+oj.pruned
+plot(oj.pruned)
+text(oj.pruned)
+```
+
+(j): Compare the training error rates between the pruned and unpruned trees. Which is higher?
+
+```{r}
+summary(oj.pruned)
+```
+
+The training error rate of pruned tree (0.1825) is higher than that of complete tree (0.165).
+
+(k): Compare the test error rates between the pruned and unpruned trees. Which is higher?
+```{r}
+oj.pred <- predict(oj.tree, oj.test, type = 'class')
+table(oj.pred, oj.test$Purchase)
+
+oj.pruned.pred <- predict(oj.pruned, oj.test, type = 'class')
+table(oj.pruned.pred, oj.test$Purchase)
+```
+
+The test error rate is:
+```{r}
+(40 + 30) / (119 + 30 + 40 + 81)
+```
+
+The test error rate of pruned tree (0.259) is higher than that of complete tree (0.2259).
+
+# Question 10
