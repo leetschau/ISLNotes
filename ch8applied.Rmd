@@ -228,3 +228,76 @@ The test error rate is:
 The test error rate of pruned tree (0.259) is higher than that of complete tree (0.2259).
 
 # Question 10
+
+(a): Remove the observations for whom the salary information is unknown, and then log-transform the salaries.
+```{r}
+Hitters <- na.omit(Hitters)
+Hitters$Salary <- log(Hitters$Salary)
+```
+
+(b): Create a training set consisting of the first 200 observations, and
+a test set consisting of the remaining observations.
+```{r}
+train <- 1:200
+hitter.train <- Hitters[train, ]
+hitter.test <- Hitters[-train, ]
+```
+
+(c): Perform boosting on the training set with 1,000 trees for a range of values of the shrinkage parameter $\lambda$. Produce a plot with different shrinkage values on the x-axis and the corresponding training set MSE on the y-axis.
+(d): Produce a plot with different shrinkage values on the x-axis and
+the corresponding test set MSE on the y-axis.
+```{r}
+library(gbm)
+set.seed(1)
+shrks <- 10 ^ seq(-10, -0.1, by = 0.1)
+train.err <- rep(NA, length(shrks))
+test.err <- rep(NA, length(shrks))
+for (i in 1 : length(shrks)) {
+  hitter.boost <- gbm(Salary ~ ., data = hitter.train, distribution = 'gaussian', n.trees = 1000, shrinkage = shrks[i])
+  train.pred <- predict(hitter.boost, hitter.train, n.trees = 1000)
+  train.err[i] <- mean((train.pred - hitter.train$Salary) ^ 2)
+  test.pred <- predict(hitter.boost, hitter.test, n.trees = 1000)
+  test.err[i] <- mean((test.pred - hitter.test$Salary) ^ 2)
+}
+plot(shrks, train.err, type="l", xlab="Shrinkage", ylab="MSE", col="blue")
+lines(shrks, test.err, type="b", xlab="Shrinkage", ylab="Test MSE", col="red", pch=20)
+legend("topright", legend = c("training MSE", "test MSE"), col = c('blue', 'red'), lty = 1, lwd =2, cex = 0.8)
+```
+
+(e): Compare the test MSE of boosting to the test MSE that results from applying two of the regression approaches seen in Chapters 3 and 6.
+```{r}
+lm.fit <- lm(Salary ~ ., data = hitter.train)
+lm.pred <- predict(lm.fit, hitter.test)
+mean((lm.pred - hitter.test$Salary)^2)
+library(glmnet)
+set.seed(1)
+x <- model.matrix(Salary ~ ., data = hitter.train)
+y <- hitter.train$Salary
+x.test = model.matrix(Salary ~ ., data = hitter.test)
+lasso.fit <- glmnet(x, y, alpha = 1)
+lasso.pred <- predict(lasso.fit, s = 0.01, newx = x.test)
+mean((hitter.test$Salary - lasso.pred) ^ 2)
+```
+
+The test MSE of linear regression (0.49) and lasso (0.47) are both larger than that of boosted decision tree model.
+
+(f): Which variables appear to be the most important predictors in the boosted model?
+
+```{r}
+summary(gbm(Salary ~ ., data = hitter.train, distribution = 'gaussian', n.trees = 1000, shrinkage = shrks[which.min(test.err)]))
+```
+
+*CAtBat*, *CHits* and *PutOuts* are the most important 3 predictors.
+
+(g): Now apply bagging to the training set. What is the test set MSE for this approach?
+
+```{r}
+library(randomForest)
+set.seed(1)
+hitter.bag <- randomForest(Salary ~ ., data = Hitters, subset = train, mtry = ncol(Hitters) - 1, importance = TRUE)
+hitter.pred <- predict(hitter.bag, hitter.test)
+mean((hitter.pred - hitter.test$Salary) ^ 2)
+min(test.err)
+```
+
+Test MSE of bagging (0.230) is a little lower than that of boosted tree (0.254).
