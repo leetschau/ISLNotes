@@ -301,3 +301,54 @@ min(test.err)
 ```
 
 Test MSE of bagging (0.230) is a little lower than that of boosted tree (0.254).
+
+# Question 11
+
+(a): Create a training set consisting of the first 1,000 observations, and a test set consisting of the remaining observations.
+(b): Fit a boosting model to the training set with Purchase as the response and the other variables as predictors. Use 1,000 trees, and a shrinkage value of 0.01. Which predictors appear to be the most important?
+
+```{r}
+library(gbm)
+set.seed(1)
+Caravan$binPurchase <- rep(0, nrow(Caravan))
+Caravan$binPurchase[Caravan$Purchase == 'Yes'] <- 1
+train <- 1:1000
+cara.train <- Caravan[train, ]
+cara.test <- Caravan[-train, ]
+cara.boosted <- gbm(binPurchase ~ . - Purchase, data = cara.train, distribution = 'bernoulli', n.trees = 1000, shrinkage = 0.01)
+summary(cara.boosted)
+```
+
+*PPERSAUT*, *MKOOPKLA* and *MOPLHOOG* are most important predictors.
+
+Note: use `distribution = 'gaussian'` for regression problem, and `distribution = 'bernoulli'` for classification problem. See "Arguments > distribution" in the documentation of `gbm` for details:
+
+> either a character string specifying the name of the distribution to use or a list with a component name specifying the distribution and any additional parameters needed. If not specified, gbm will try to **guess**: if the response has only 2 unique values, **bernoulli** is assumed; otherwise, if the response is a factor, multinomial is assumed; otherwise, if the response has class "Surv", coxph is assumed; otherwise, **gaussian** is assumed.
+
+
+(c): Use the boosting model to predict the response on the test data. Predict that a person will make a purchase if the estimated probability of purchase is greater than 20%. Form a confusion matrix. What fraction of the people predicted to make a purchase do in fact make one? How does this compare with the results obtained from applying KNN or logistic regression to this data set?
+```{r}
+cara.pred <- predict(cara.boosted, cara.test, n.trees = 1000, type = 'response')
+summary(cara.test$Purchase[cara.pred > 0.2])
+```
+
+```{r}
+33 / (123 + 33)
+```
+
+In all predicted buyers (whose predicted probability larger than 20%), there are 21% people do a purchase in fact.
+
+Note: the section *Value* in documentation of `predict.gbm` explains why we need `type = 'response`` added:
+
+> Returns a vector of predictions. By default the predictions are on the scale of f(x). For example, for the Bernoulli loss the returned value is on the **log odds scale**, poisson loss on the log scale, and coxph is on the log hazard scale.
+If **type="response"** then gbm converts back to **the same scale as the outcome**. Currently the only effect this will have is returning probabilities for bernoulli and expected counts for poisson. For the other distributions "response" and "link" return the same.
+
+Fit with linear model:
+```{r}
+cara.lm <- glm(binPurchase ~ . - Purchase, data = cara.train, family = 'binomial')
+cara.pred <- predict(cara.lm, cara.test, type = 'response')
+summary(cara.test$Purchase[cara.pred > 0.2])
+58 / (350 + 58)
+```
+
+The correct rate of logistic regression is 14.2%, lower than that of boosted regression model.
