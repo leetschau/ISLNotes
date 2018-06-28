@@ -1,0 +1,120 @@
+---
+title: "Lab of Chapter 9"
+output: html_notebook
+---
+
+# 9.6.1 Support Vector Classifier
+
+## For data not linearly seperable
+
+Setup data set:
+```{r}
+library(e1071)
+set.seed(1)
+x <- matrix(rnorm(20 * 2), ncol = 2)
+y <- c(rep(-1, 10), rep(1, 10))
+x[y == 1, ] <- x[y == 1, ] + 1
+```
+
+这里从 `x` 数据集中选择了一半观测点, 给这些点的x坐标、y坐标分别加1，相当于将这些点向右上方平移了 $\sqrt 2$。
+
+Check whether the classes are linearly separable:
+```{r}
+plot(x, col = (3 - y))
+```
+
+Fit the support vector classifier and plot:
+```{r}
+dat <- data.frame(x = x, y = as.factor(y))
+svmfit <- svm(y ~ ., data = dat, kernel = 'linear', cost = 10, scale = FALSE)
+plot(svmfit, dat)
+```
+
+由于这幅图将x2作为横坐标，x1作为纵坐标，直接看与上面原始数据点图对应不上，但只要把原始数据点图坐标变换到上图的方向（需要在图片浏览软件里先旋转，再翻转），就会发现20个数据点都能对应上。
+
+上图中，青色和紫色的边界就是超平面所在位置（由于构建svm时指定了 `kernel = 'linear'`，所以边界是直线，由于绘图算法的原因，图中是一条有毛刺的直线），叉号代表支持向量，圆圈代表非支持向量，所以叉号覆盖的、与超平面平行的带状区域，就是margin所在区域（margin的含义可参考P342上的图9.3）。
+在 (x1 = -1.2, x2 = 1) 位置上的红色叉号处于青色区域内，表示这个点被错误的分类了。
+
+Summary of the model:
+```{r}
+svmfit$index
+summary(svmfit)
+```
+`(4 3)` 表明上面的7个支持向量，4个属于 -1 类（黑色，都位于青色区域中），3个属于 1 类（红色，其中2个位于紫色区域中，1个位于青色区域中，表示被错误的分类），与上图中青色和紫色区域中的叉号分布吻合。
+
+Build support vector classifier with smaller cost:
+```{r}
+svmfit <- svm(y ~ ., data = dat, kernel = 'linear', cost = 0.1, scale = FALSE)
+plot(svmfit, dat)
+svmfit$index
+```
+
+与 cost = 10 的输出图相比，margin 明显变宽了，覆盖了更多的数据点成为 support vector，由于更多的数据点参与了超平面的确定，可以认为超平面对数据变化的敏感度降低了，也就是variance降低了(bias升高了)。
+
+
+Choose cost value with cross-validation:
+```{r}
+set.seed(1)
+tune.out <- tune(svm, y ~., data = dat, kernel = 'linear', ranges = list(cost = c(0.001, 0.01, 0.1, 1, 5, 10, 100)))
+summary(tune.out)
+```
+
+Summary the best model:
+```{r}
+best.model <- tune.out$best.model
+summary(best.model)
+```
+
+Calculate the test error.
+First build the test dataset:
+```{r}
+xtest <- matrix(rnorm(20 * 2), ncol = 2)
+ytest <- sample(c(1, -1), 20, replace = TRUE)
+xtest[ytest == 1, ] = xtest[ytest == 1, ] + 1
+testdat <- data.frame(x = xtest, y = as.factor(ytest))
+```
+
+Predict the class on the test dataset:
+```{r}
+ypred <- predict(best.model, testdat)
+table(predict = ypred, truth = testdat$y)
+```
+
+The correct rate is: (7 + 9) / (7 + 4 + 0 + 9) = 80%.
+
+Predict based on the model with cost = 0.01:
+```{r}
+svmfit <- svm(y ~ ., data = dat, kernel = 'linear', cost = 0.01, scale = FALSE)
+ypred <- predict(svmfit, testdat)
+table(predict = ypred, truth = testdat$y)
+```
+
+The correct rate is (7 + 4) / (7 + 4 + 0 + 9) = 55%, which is lower than the model with cost 0.1.
+
+## For data seperable
+
+Move the half data point more faraway:
+```{r}
+x[y == 1, ] = x[y == 1, ] + 0.5
+plot(x, col = (y + 5) / 2, pch = 19)
+```
+
+这里生成的数据向右上平移0.5后仍然不可分，所以上面的代码将平移量改成了1。
+
+Build svm:
+```{r}
+dat <- data.frame(x = x, y = as.factor(y))
+svmfit <- svm(y ~ ., data = dat, kernel = 'linear', scale = FALSE, cost = 1e5)
+summary(svmfit)
+plot(svmfit, data = dat)
+```
+可以看到高 cost 导致 margin非常窄。
+
+Build the svm with lower cost:
+```{r}
+svmfit <- svm(y ~ ., data = dat, kernel = 'linear', scale = FALSE, cost = 1)
+summary(svmfit)
+plot(svmfit, data = dat)
+```
+
+降低 cost 后，margin 宽了许多，其中一个数据点 (x1 = -0.5, x2 = 1.5) 被划分到错误的区域中。所以 bias 比 cost = 1e5 时高，相应地 variance 降低了。
