@@ -164,3 +164,103 @@ So the correct rate is:
 ```{r}
 (68 + 21) / (68 + 1 + 10 + 21)
 ```
+
+# 9.6.3 ROC Curves
+
+Define a ROC plot function:
+```{r}
+library(ROCR)
+rocplot <- function(pred, truth, ...) {
+  predob <- prediction(pred, truth)
+  perf <- performance(predob, 'tpr', 'fpr')
+  plot(perf, ...)
+}
+```
+
+*Decision values* 是将计算出的系数代入到观测值向量后得到的值，超平面两侧的观测点各自的 *decision values* 分别大于和小于零，绝对值越大，离分隔面越远，当这个值为0时，表示观测点在分隔面上。
+
+In order to obtain the fitted values for a given SVM model fit, we use `decision.values=TRUE` when fitting svm() . Then the `predict()` function will output the fitted values:
+```{r}
+svmfit.opt <- svm(y ~ ., data = dat[train, ], kernel = 'radial', cost = 1, gamma = 2, decision.values = TRUE)
+fit <- attributes(predict(svmfit.opt, dat[train, ], decision.values = TRUE))$decision.values
+par(mfrow = c(1,2))
+rocplot(fit, dat[train, ]$y, main = 'Training Data')
+
+# By increasing $\gamma$ we can produce a more flexible fit and generate further improvements in accuracy:
+
+svmfit.flex <- svm(y ~ ., data = dat[train, ], kernel = 'radial', cost = 1, gamma = 50, decision.values = TRUE)
+fit <- attributes(predict(svmfit.flex, dat[train, ], decision.values = TRUE))$decision.values
+rocplot(fit, dat[train, ]$y, add = TRUE, col = 'red')
+```
+
+注意这里不能把增加 gamma 后的代码放在新的 code chunk 里，不同 chunk 间的 plot 对象是不共享的。
+
+Predict and plot on test dataset:
+```{r}
+fit <- attributes(predict(svmfit.opt, dat[-train, ], decision.values = TRUE))$decision.values
+rocplot(fit, dat[-train, ]$y, main = 'Test Data')
+fit <- attributes(predict(svmfit.flex, dat[-train, ], decision.values = TRUE))$decision.values
+rocplot(fit, dat[-train, ]$y, add = TRUE, col = 'red')
+```
+
+So the model `svmfit.opt` with `gamma = 2` is better than the model `svmfit.flex` with `gamma = 50`.
+
+# 9.6.4 SVM with Multiple Classes
+
+```{r}
+set.seed(1)
+x <- rbind(x, matrix(rnorm(50 * 2),  ncol = 2))
+y <- c(y, rep(0, 50))
+x[y == 0, 2] <- x[y == 0, 2] + 2
+dat <- data.frame(x = x, y = as.factor(y))
+par(mfrow = c(1,1))
+plot(x, col = (y + 1))
+```
+
+可以看到黑色(y = 0)数据点相对于原始位置（绿色点所在区域）向上平移了2个单位（只给y坐标加了2）。
+
+`plot()` 函数的 `col` 参数自带8种颜色，超过8后重新开始循环：
+```{r}
+lst <- c(1:17)
+barplot(lst, axes=FALSE, col=lst)
+```
+
+Fit an SVM to the data:
+```{r}
+svmfit <- svm(y ~ ., data = dat, kernel = 'radial', gamma = 1, cost = 10)
+plot(svmfit, dat)
+```
+
+再次提醒此图的坐标轴与上面的数据分布图不同，需要旋转90度再水平翻转才能与数据分布图对照。
+
+响应变量的水平数为2时，使用标准 SVM 分类，如果大于2，使用 one-vs-one 方法（见9.4.1节）确定观测点的响应变量类型。
+
+# 9.6.5 Application to Gene Expression Data
+
+```{r}
+library(ISLR)
+names(Khan)
+dim(Khan$xtrain)
+dim(Khan$xtest)
+table(Khan$ytrain)
+```
+
+So there are 63 observations in training set and 20 observations in test set, each with 2308 features. The response variable has 4 levels, marked as 1 ~ 4.
+
+Fit a SVM with a linear kernel on training set:
+```{r}
+dat <- data.frame(x = Khan$xtrain, y = as.factor(Khan$ytrain))
+out <- svm(y ~ ., data = dat, kernel = 'linear', cost = 10)
+summary(out)
+table(out$fitted, dat$y)
+```
+
+非对角线上全部是0，也就是没有 training bias，由于特征数大大高于观测数，这个结果是合理的。
+
+Predict on the test set:
+```{r}
+pred <- predict(out, Khan$xtest)
+table(pred, Khan$ytest)
+```
+
+非对角线上有2个观测：有两个属于3类的观测被预测为了2类。
