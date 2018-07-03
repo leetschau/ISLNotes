@@ -24,3 +24,5 @@ Notes and exercise solutions:
 * [Chapter 7](http://23deda4d.wiz03.com/share/s/0zTJFd01gQ7-2X7QpT26_jGQ2D_R_W0N5Qfi2LkjEp3JkFt0)
 
 * [Chapter 8](http://23deda4d.wiz03.com/share/s/0zTJFd01gQ7-2X7QpT26_jGQ3_EC9k2tAkgO2l1DC51HyzX6)
+
+* [Chapter 9](http://23deda4d.wiz03.com/share/s/0zTJFd01gQ7-2X7QpT26_jGQ0ycZoM0E-kwy2fOvSm2gdH4E)
