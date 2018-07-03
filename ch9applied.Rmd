@@ -1,0 +1,150 @@
+---
+title: "Applied Exercises of Chapter 9"
+output: html_notebook
+---
+
+# Question 4
+
+Generate a simulated two-class data set with 100 observations and two features in which there is a visible but non-linear separation between the two classes. Show that in this setting, a support vector machine with a polynomial kernel (with degree greater than 1) or a radial kernel will outperform a support vector classifier on the training data. Which technique performs best on the test data? Make plots and report training and test error rates in order to back up your assertions.
+
+Generate data and plot:
+```{r}
+set.seed(1)
+transl <- 3
+X <- matrix(rnorm(100 * 2), ncol = 2)
+X[1:30, ] <- X[1:30, ] + transl
+X[31:60, ] <- X[31:60, ] - transl
+y <- c(rep(0, 60), rep(1, 40))
+dat <- data.frame(x = X, y = as.factor(y))
+plot(X, col = y + 1)
+```
+
+Split to training and test set:
+```{r}
+train <- sample(100, 80)
+dat.train <- dat[train, ]
+dat.test <- dat[-train, ]
+```
+
+Fit with a support vector classifier and describe the model:
+```{r}
+library(e1071)
+svm.lin <- svm(y ~ ., data = dat.train, kernel = 'linear', scale = FALSE)
+plot(svm.lin, data = dat.train)
+summary(svm.lin)
+```
+
+Calculate the training error of the support vector classifier:
+```{r}
+table(predict = svm.lin$fitted, truth = dat.train$y)
+```
+
+The error rate: $\frac{33}{47 + 33} = 41.25%$.
+
+The support vector classifier marks all training points as class *zero*, which means this model is useless on this training set.
+
+Fit with polynomial kernel and calculate the training error rate:
+```{r}
+svm.poly <- svm(y ~ ., data = dat.train, kernel = 'polynomial', scale = FALSE)
+plot(svm.poly, data = dat.train)
+table(predict = svm.poly$fitted, truth = dat.train$y)
+```
+
+There are 2 correct prediction.
+
+Fit with radial kernel and calculate the traing error rate:
+```{r}
+svm.rad <- svm(y ~ ., data = dat.train, kernel = 'radial', scale = FALSE)
+plot(svm.rad, data = dat.train)
+table(predict = svm.rad$fitted, truth = dat.train$y)
+```
+
+The error rate is $\frac{1}{1 + 46 + 33} = 1.25%$, which much more less than the other 2 kernels.
+
+Compare the test errors of the 3 kernels:
+```{r}
+lin.pred <- predict(svm.lin, dat.test)
+table(predict = lin.pred, truth = dat.test$y)
+poly.pred <- predict(svm.poly, dat.test)
+table(predict = poly.pred, truth = dat.test$y)
+rad.pred <- predict(svm.rad, dat.test)
+table(predict = rad.pred, truth = dat.test$y)
+```
+
+The test error rate for linear, polynomial (with default degree: 3) and radial kernel are: 35%, 35% and 0.
+
+# Question 5
+
+We have seen that we can fit an SVM with a non-linear kernel in order to perform classification using a non-linear decision boundary. We will now see that we can also obtain a non-linear decision boundary by performing logistic regression using non-linear transformations of the features.
+
+(a) Generate a data set with n = 500 and p = 2, such that the observations belong to two classes with a quadratic decision boundary between them:
+```{r}
+set.seed(1)
+x1 <- runif(500) - 0.5
+x2 <- runif(500) - 0.5
+y <- as.integer(x1 ^ 2 - x2 ^ 2 > 0)
+```
+
+两类的分界线是 $x_1^2 - x_2^2 = 0$，也就是 $x = \pm y$，4个象限的角平分线，边界是直线而不是二次曲线。
+
+(b) Plot the observations, colored according to their class labels. Your plot should display X 1 on the x-axis, and X 2 on the y-axis:
+```{r}
+plot(x1[y == 0], x2[y == 0], col = "red", xlab = "X1", ylab = "X2")
+points(x1[y == 1], x2[y == 1], col = "blue")
+```
+
+(c) Fit a logistic regression model to the data, using $X_1$ and $X_2$ as predictors.
+
+```{r}
+dat <- data.frame(x1 = x1, x2 = x2, y = as.factor(y))
+lr.fit <- glm(y ~ ., data = dat, family = 'binomial')
+```
+
+(d) Apply this model to the *training data* in order to obtain a predicted class label for each training observation. Plot the observations, colored according to the predicted class labels. The decision boundary should be linear.
+
+```{r}
+lr.prob <- predict(lr.fit, newdata = dat, type = 'response')
+lr.pred <- ifelse(lr.prob > 0.5, 1, 0)
+plot(dat$x1, dat$x2, col = lr.pred + 2)
+```
+
+边界是线性的，但即使在训练集上，预测结果误差仍然非常大，表明线性逻辑回归不适于这个数据集。
+
+(e) Now ﬁt a logistic regression model to the data using non-linear functions of $X_1$ and $X_2$ as predictors (e.g. $X_1^2$ , $X_1 \times X_2$, $log(X_2)$, and so forth).
+
+```{r}
+lr.nl <- glm(y ~ poly(x1, 2) + poly(x2, 2), data = dat, family = 'binomial')
+summary(lr.nl)
+```
+
+(f) Apply this model to the training data in order to obtain a predicted class label for each training observation. Plot the observations, colored according to the predicted class labels. The decision boundary should be obviously non-linear. If it is not, then repeat (a)-(e) until you come up with an example in which the predicted class labels are obviously non-linear.
+
+```{r}
+lr.prob.nl <- predict(lr.nl, newdata = dat, type = 'response')
+lr.pred.nl <- ifelse(lr.prob.nl > 0.5, 1, 0)
+plot(dat$x1, dat$x2, col = lr.pred.nl + 2)
+```
+
+The predictions are much better than linear model.
+
+(g) Fit a support vector classiﬁer to the data with $X_1$ and $X_2$ as predictors. Obtain a class prediction for each training observation. Plot the observations, colored according to the predicted class labels.
+
+```{r}
+svm.lin <- svm(y ~ ., data = dat, kernel = 'linear', cost = 0.01)
+plot(svm.lin, dat)
+```
+
+
+(h) Fit a SVM using a non-linear kernel to the data. Obtain a class prediction for each training observation. Plot the observations, colored according to the predicted class labels.
+
+```{r}
+svm.nl <- svm(y ~ ., data = dat, kernel = 'radial', gamma = 1)
+plot(svm.nl, data = dat)
+```
+
+(i) Comment on your results.
+
+线性逻辑回归处理非线性边界效果很差，SVM线性核使用小 cost 时效果尚可，非线性逻辑回归和SVM处理非线性边界效果都很好。
+
+# Question 6
+At the end of Section 9.6.1, it is claimed that in the case of data that
