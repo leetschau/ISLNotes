@@ -147,4 +147,79 @@ plot(svm.nl, data = dat)
 线性逻辑回归处理非线性边界效果很差，SVM线性核使用小 cost 时效果尚可，非线性逻辑回归和SVM处理非线性边界效果都很好。
 
 # Question 6
-At the end of Section 9.6.1, it is claimed that in the case of data that
+
+At the end of Section 9.6.1, it is claimed that in the case of data that is just barely linearly separable, a support vector classiﬁer with a small value of cost that misclassiﬁes a couple of training observations may perform better on test data than one with a huge value of cost that does not misclassify any training observations. You will now investigate this claim.
+
+## 6a
+
+Generate two-class data with p = 2 in such a way that the classes are just barely linearly separable.
+
+```{r}
+set.seed(1)
+obs = 1000
+x1 <- runif(obs, min = -4, max = 4)
+x2 <- runif(obs, min = -1, max = 16)
+y <- ifelse(x2 > x1 ^ 2, 0, 1)
+dat <- data.frame(x1 = x1, x2 = x2, y = as.factor(y))
+train <- sample(obs, obs/2)
+dat.train <- dat[train, ]
+dat.test <- dat[-train, ]
+par(mfrow = c(1,2))
+plot(dat.train$x1, dat.train$x2, col = as.integer(dat.train$y) + 1, main = 'training set')
+plot(dat.test$x1, dat.test$x2, col = as.integer(dat.test$y) + 1, main = 'test set')
+```
+
+## 6b
+
+Compute the cross-validation error rates for support vector classiﬁers with a range of cost values. How many training errors are misclassiﬁed for each value of cost considered, and how does this relate to the cross-validation errors obtained?
+
+```{r}
+set.seed(1)
+cost.grid <- c(0.001, 0.01, 0.1, 1, 5, 10, 100, 10000)
+tune.out <- tune(svm, y ~., data = dat.train, kernel = 'linear', ranges = list(cost = cost.grid))
+summary(tune.out)
+```
+
+Training errors of the models with different *cost* value:
+```{r}
+err.rate.train <- rep(NA, length(cost.grid))
+for (cost in cost.grid) {
+  svm.fit <- svm(y ~ ., data = dat.train, kernel = 'linear', cost = cost)
+  plot(svm.fit, data = dat.train)
+  res <- table(prediction = predict(svm.fit, newdata = dat.train), truth = dat.train$y)
+  err.rate.train[match(cost, cost.grid)] <- (res[2,1] + res[1,2]) / sum(res)
+}
+err.rate.train
+paste('The cost', cost.grid[which.min(err.rate.train)], 'has the minimum training error:', min(err.rate.train))
+```
+
+最优结果与 cross-validation 结果不一致。
+随着 *cost* 变大，training error 应该降低，但这里有升有降，原因尚不清楚。
+
+## 6c
+
+Generate an appropriate test data set, and compute the test errors corresponding to each of the values of cost considered. Which value of cost leads to the fewest test errors, and how does this compare to the values of cost that yield the fewest training errors and the fewest cross-validation errors?
+
+```{r}
+err.rate.test <- rep(NA, length(cost.grid))
+for (cost in cost.grid) {
+  svm.fit <- svm(y ~ ., data = dat.train, kernel = 'linear', cost = cost)
+  res <- table(prediction = predict(svm.fit, newdata = dat.test), truth = dat.test$y)
+  err.rate.test[match(cost, cost.grid)] <- (res[2,1] + res[1,2]) / sum(res)
+}
+err.rate.test
+paste('The cost', cost.grid[which.min(err.rate.test)], 'has the minimum test error:', min(err.rate.test))
+```
+
+最优结果与 cross-validation 结果一致，都是 cost = 0.1 时最优。
+
+## 6d
+
+Discuss your results.
+
+线性 kernel 拟合非线性边界时，cost 较小时 training error 和 test error 都比较小，但如果 cost 太小，由于 margin 过宽导致失去分类作用，见 `cost = 0.001` 时的模型图。
+
+总体来说，这种情况下无论如何调整 cost 错误率都比较高，所以当使用不同 cost 后错误率无明显变化一直很高，可能是 kernel 选择不当导致的。
+
+# Question 7
+
