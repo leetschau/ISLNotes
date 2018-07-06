@@ -1,6 +1,11 @@
 ---
 title: "Applied Exercises of Chapter 9"
-output: html_notebook
+
+output:
+  github_document:
+    html_preview: false
+    toc: true
+    toc_depth: 3
 ---
 
 # Question 4
@@ -223,3 +228,58 @@ Discuss your results.
 
 # Question 7
 
+In this problem, you will use support vector approaches in order to predict whether a given car gets high or low gas mileage based on the Auto data set.
+
+## 7a
+
+Create a binary variable that takes on a 1 for cars with gas mileage above the median, and a 0 for cars with gas mileage below the median.
+
+```{r}
+library(ISLR)
+mileage.median <- median(Auto$mpg)
+Auto$mb <- ifelse(Auto$mpg > mileage.median, 1, 0)
+```
+
+## 7b
+
+Fit a support vector classiﬁer to the data with various values of cost, in order to predict whether a car gets high or low gas mileage.
+Report the cross-validation errors associated with different values of this parameter.
+Comment on your results.
+
+```{r}
+cost.grid <- c(0.001, 0.1, 1, 100)
+set.seed(1)
+tune.res <- tune(svm, mb ~ . - mpg, data = Auto, kernel = 'linear', ranges = list(cost = cost.grid))
+summary(tune.res)
+```
+
+`cost = 1` has the lowest error rate.
+
+## 7c
+
+Now repeat (b), this time using SVMs with radial and polynomial basis kernels, with diﬀerent values of *gamma* and *degree* and *cost*. Comment on your results.
+
+*cost* and *gamma* in *radial* kernel:
+```{r}
+cost.grid <- c(0.01, 0.1, 1, 10, 100)
+gamma.grid <- c(0.5, 1, 2, 3, 4)
+tune.radial <- tune(svm, mb ~ ., data = Auto, kernel = 'radial', ranges = list(cost = cost.grid, gamma = gamma.grid))
+summary(tune.radial)
+```
+
+*cost* and *degree* in *polynomial* kernel:
+```{r}
+deg.grid <- c(1, 2, 3, 4)
+tune.degree <- tune(svm, mb ~ ., data = Auto, kernel = 'polynomial', ranges = list(cost = cost.grid, degree = deg.grid))
+summary(tune.degree)
+```
+
+## 7d
+
+Make some plots to back up your assertions in (b) and (c).
+
+```{r}
+plot(tune.radial$best.model, Auto, mpg ~ horsepower)
+```
+
+Why there's no output?
