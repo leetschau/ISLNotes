@@ -283,3 +283,122 @@ plot(tune.radial$best.model, Auto, mpg ~ horsepower)
 ```
 
 Why there's no output?
+
+# Question 8
+
+This problem involves the OJ data set which is part of the *ISLR* package.
+
+## 8a
+
+Create a training set containing a random sample of 800 observations, and a test set containing the remaining observations:
+
+```{r}
+library(ISLR)
+set.seed(1)
+train <- sample(nrow(OJ), 800)
+dat.train <- OJ[train, ]
+dat.test <- OJ[-train, ]
+```
+
+## 8b
+
+Fit a support vector classiﬁer to the training data using *cost=0.01*, with *Purchase* as the response and the other variables as predictors. Use the `summary()` function to produce summary statistics, and describe the results obtained.
+
+```{r}
+svc <- svm(Purchase ~ ., data = dat.train, kernel = 'linear', cost = 0.01)
+summary(svc)
+```
+
+There are 432 support vectors in 800 observations, 215 for class *CH* and 217 for class *MM*.
+
+## 8c
+
+What are the training and test error rates?
+
+Training error:
+```{r}
+train.pred <- predict(svc, newdata = dat.train)
+table(predict = train.pred, truth = dat.train$Purchase)
+```
+
+The training error rate: $78 + 55 / 800 = 0.166$.
+
+```{r}
+test.pred <- predict(svc, newdata = dat.test)
+table(predict = test.pred, truth = dat.test$Purchase)
+```
+
+Test error rate: $18 + 31 / 270 = 0.1815$.
+
+## 8d
+
+Use the tune() function to select an optimal *cost*. Consider values in the range 0.01 to 10.
+
+```{r}
+set.seed(1)
+tune.svc <- tune(svm, Purchase ~ ., data = OJ, kernel = "linear", ranges = list(cost = c(0.01, 0.1, 1, 10)))
+summary(tune.svc)
+summary(tune.svc$best.model)
+```
+
+So the radial kernel with cost = 10 is the optimal model.
+
+## 8e
+
+Compute the training and test error rates using this new value for *cost*.
+
+```{r}
+train.pred <- predict(tune.svc$best.model, newdata = dat.train)
+table(predict = train.pred, truth = dat.train$Purchase)
+
+test.pred <- predict(tune.svc$best.model, newdata = dat.test)
+table(predict = test.pred, truth = dat.test$Purchase)
+```
+
+The training and test errors are: $(72 + 56) / 800 = 0.16$ and $(26 + 18) / 270 = 0.163$.
+
+## 8f
+
+Repeat parts (b) through (e) using a support vector machine with a radial kernel. Use the default value for *gamma*.
+
+```{r}
+tune.radial <- tune(svm, Purchase ~ ., data = OJ, kernel = "radial", ranges = list(cost = c(0.01, 0.1, 1, 10)))
+summary(tune.radial)
+summary(tune.radial$best.model)
+```
+
+```{r}
+train.pred <- predict(tune.radial$best.model, newdata = dat.train)
+table(predict = train.pred, truth = dat.train$Purchase)
+
+test.pred <- predict(tune.radial$best.model, newdata = dat.test)
+table(predict = test.pred, truth = dat.test$Purchase)
+```
+
+The training and test error: $(80 + 41) / 800 = 0.15$, and $(28 + 15) / 270 = 0.159$.
+
+## 8g
+
+Repeat parts (b) through (e) using a support vector machine with a polynomial kernel. Set `degree = 2`
+
+```{r}
+tune.poly <- tune(svm, Purchase ~ ., data = OJ, kernel = "polynomial", degree = 2, ranges = list(cost = c(0.01, 0.1, 1, 10)))
+summary(tune.poly)
+summary(tune.poly$best.model)
+```
+
+```{r}
+train.pred <- predict(tune.poly$best.model, newdata = dat.train)
+table(predict = train.pred, truth = dat.train$Purchase)
+
+test.pred <- predict(tune.poly$best.model, newdata = dat.test)
+table(predict = test.pred, truth = dat.test$Purchase)
+```
+
+The training and test error: $(74 + 43) / 800 = 0.146$, and $(29 + 12) / 270 = 0.152$.
+
+## 8h
+
+Overall, which approach seems to give the best results on this data?
+
+The polynomial kernel with `cost = 10` and `degree = 2` give the best results (lowest training and test errors).

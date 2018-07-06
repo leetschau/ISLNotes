@@ -13,6 +13,15 @@ Applied Exercises of Chapter 9
     -   [7b](#b-1)
     -   [7c](#c-1)
     -   [7d](#d-1)
+-   [Question 8](#question-8)
+    -   [8a](#a-2)
+    -   [8b](#b-2)
+    -   [8c](#c-2)
+    -   [8d](#d-2)
+    -   [8e](#e)
+    -   [8f](#f)
+    -   [8g](#g)
+    -   [8h](#h)
 
 Question 4
 ==========
@@ -559,3 +568,331 @@ plot(tune.radial$best.model, Auto, mpg ~ horsepower)
 ```
 
 Why there's no output?
+
+Question 8
+==========
+
+This problem involves the OJ data set which is part of the *ISLR* package.
+
+8a
+--
+
+Create a training set containing a random sample of 800 observations, and a test set containing the remaining observations:
+
+``` r
+library(ISLR)
+set.seed(1)
+train <- sample(nrow(OJ), 800)
+dat.train <- OJ[train, ]
+dat.test <- OJ[-train, ]
+```
+
+8b
+--
+
+Fit a support vector classiﬁer to the training data using *cost=0.01*, with *Purchase* as the response and the other variables as predictors. Use the `summary()` function to produce summary statistics, and describe the results obtained.
+
+``` r
+svc <- svm(Purchase ~ ., data = dat.train, kernel = 'linear', cost = 0.01)
+summary(svc)
+```
+
+    ## 
+    ## Call:
+    ## svm(formula = Purchase ~ ., data = dat.train, kernel = "linear", 
+    ##     cost = 0.01)
+    ## 
+    ## 
+    ## Parameters:
+    ##    SVM-Type:  C-classification 
+    ##  SVM-Kernel:  linear 
+    ##        cost:  0.01 
+    ##       gamma:  0.05555556 
+    ## 
+    ## Number of Support Vectors:  432
+    ## 
+    ##  ( 215 217 )
+    ## 
+    ## 
+    ## Number of Classes:  2 
+    ## 
+    ## Levels: 
+    ##  CH MM
+
+There are 432 support vectors in 800 observations, 215 for class *CH* and 217 for class *MM*.
+
+8c
+--
+
+What are the training and test error rates?
+
+Training error:
+
+``` r
+train.pred <- predict(svc, newdata = dat.train)
+table(predict = train.pred, truth = dat.train$Purchase)
+```
+
+    ##        truth
+    ## predict  CH  MM
+    ##      CH 439  78
+    ##      MM  55 228
+
+The training error rate: 78 + 55/800 = 0.166.
+
+``` r
+test.pred <- predict(svc, newdata = dat.test)
+table(predict = test.pred, truth = dat.test$Purchase)
+```
+
+    ##        truth
+    ## predict  CH  MM
+    ##      CH 141  31
+    ##      MM  18  80
+
+Test error rate: 18 + 31/270 = 0.1815.
+
+8d
+--
+
+Use the tune() function to select an optimal *cost*. Consider values in the range 0.01 to 10.
+
+``` r
+set.seed(1)
+tune.svc <- tune(svm, Purchase ~ ., data = OJ, kernel = "linear", ranges = list(cost = c(0.01, 0.1, 1, 10)))
+summary(tune.svc)
+```
+
+    ## 
+    ## Parameter tuning of 'svm':
+    ## 
+    ## - sampling method: 10-fold cross validation 
+    ## 
+    ## - best parameters:
+    ##  cost
+    ##    10
+    ## 
+    ## - best performance: 0.1672897 
+    ## 
+    ## - Detailed performance results:
+    ##    cost     error dispersion
+    ## 1  0.01 0.1719626 0.02929012
+    ## 2  0.10 0.1719626 0.02380682
+    ## 3  1.00 0.1757009 0.02561346
+    ## 4 10.00 0.1672897 0.02767155
+
+``` r
+summary(tune.svc$best.model)
+```
+
+    ## 
+    ## Call:
+    ## best.tune(method = svm, train.x = Purchase ~ ., data = OJ, ranges = list(cost = c(0.01, 
+    ##     0.1, 1, 10)), kernel = "linear")
+    ## 
+    ## 
+    ## Parameters:
+    ##    SVM-Type:  C-classification 
+    ##  SVM-Kernel:  linear 
+    ##        cost:  10 
+    ##       gamma:  0.05555556 
+    ## 
+    ## Number of Support Vectors:  442
+    ## 
+    ##  ( 223 219 )
+    ## 
+    ## 
+    ## Number of Classes:  2 
+    ## 
+    ## Levels: 
+    ##  CH MM
+
+So the radial kernel with cost = 10 is the optimal model.
+
+8e
+--
+
+Compute the training and test error rates using this new value for *cost*.
+
+``` r
+train.pred <- predict(tune.svc$best.model, newdata = dat.train)
+table(predict = train.pred, truth = dat.train$Purchase)
+```
+
+    ##        truth
+    ## predict  CH  MM
+    ##      CH 438  72
+    ##      MM  56 234
+
+``` r
+test.pred <- predict(tune.svc$best.model, newdata = dat.test)
+table(predict = test.pred, truth = dat.test$Purchase)
+```
+
+    ##        truth
+    ## predict  CH  MM
+    ##      CH 141  26
+    ##      MM  18  85
+
+The training and test errors are: (72 + 56)/800 = 0.16 and (26 + 18)/270 = 0.163.
+
+8f
+--
+
+Repeat parts (b) through (e) using a support vector machine with a radial kernel. Use the default value for *gamma*.
+
+``` r
+tune.radial <- tune(svm, Purchase ~ ., data = OJ, kernel = "radial", ranges = list(cost = c(0.01, 0.1, 1, 10)))
+summary(tune.radial)
+```
+
+    ## 
+    ## Parameter tuning of 'svm':
+    ## 
+    ## - sampling method: 10-fold cross validation 
+    ## 
+    ## - best parameters:
+    ##  cost
+    ##     1
+    ## 
+    ## - best performance: 0.1719626 
+    ## 
+    ## - Detailed performance results:
+    ##    cost     error dispersion
+    ## 1  0.01 0.3897196 0.04558304
+    ## 2  0.10 0.1794393 0.05907515
+    ## 3  1.00 0.1719626 0.05290450
+    ## 4 10.00 0.1850467 0.05740884
+
+``` r
+summary(tune.radial$best.model)
+```
+
+    ## 
+    ## Call:
+    ## best.tune(method = svm, train.x = Purchase ~ ., data = OJ, ranges = list(cost = c(0.01, 
+    ##     0.1, 1, 10)), kernel = "radial")
+    ## 
+    ## 
+    ## Parameters:
+    ##    SVM-Type:  C-classification 
+    ##  SVM-Kernel:  radial 
+    ##        cost:  1 
+    ##       gamma:  0.05555556 
+    ## 
+    ## Number of Support Vectors:  485
+    ## 
+    ##  ( 245 240 )
+    ## 
+    ## 
+    ## Number of Classes:  2 
+    ## 
+    ## Levels: 
+    ##  CH MM
+
+``` r
+train.pred <- predict(tune.radial$best.model, newdata = dat.train)
+table(predict = train.pred, truth = dat.train$Purchase)
+```
+
+    ##        truth
+    ## predict  CH  MM
+    ##      CH 453  80
+    ##      MM  41 226
+
+``` r
+test.pred <- predict(tune.radial$best.model, newdata = dat.test)
+table(predict = test.pred, truth = dat.test$Purchase)
+```
+
+    ##        truth
+    ## predict  CH  MM
+    ##      CH 144  28
+    ##      MM  15  83
+
+The training and test error: (80 + 41)/800 = 0.15, and (28 + 15)/270 = 0.159.
+
+8g
+--
+
+Repeat parts (b) through (e) using a support vector machine with a polynomial kernel. Set `degree = 2`
+
+``` r
+tune.poly <- tune(svm, Purchase ~ ., data = OJ, kernel = "polynomial", degree = 2, ranges = list(cost = c(0.01, 0.1, 1, 10)))
+summary(tune.poly)
+```
+
+    ## 
+    ## Parameter tuning of 'svm':
+    ## 
+    ## - sampling method: 10-fold cross validation 
+    ## 
+    ## - best parameters:
+    ##  cost
+    ##    10
+    ## 
+    ## - best performance: 0.1691589 
+    ## 
+    ## - Detailed performance results:
+    ##    cost     error dispersion
+    ## 1  0.01 0.3700935 0.05216557
+    ## 2  0.10 0.3018692 0.04039046
+    ## 3  1.00 0.1990654 0.03917066
+    ## 4 10.00 0.1691589 0.03591348
+
+``` r
+summary(tune.poly$best.model)
+```
+
+    ## 
+    ## Call:
+    ## best.tune(method = svm, train.x = Purchase ~ ., data = OJ, ranges = list(cost = c(0.01, 
+    ##     0.1, 1, 10)), kernel = "polynomial", degree = 2)
+    ## 
+    ## 
+    ## Parameters:
+    ##    SVM-Type:  C-classification 
+    ##  SVM-Kernel:  polynomial 
+    ##        cost:  10 
+    ##      degree:  2 
+    ##       gamma:  0.05555556 
+    ##      coef.0:  0 
+    ## 
+    ## Number of Support Vectors:  450
+    ## 
+    ##  ( 230 220 )
+    ## 
+    ## 
+    ## Number of Classes:  2 
+    ## 
+    ## Levels: 
+    ##  CH MM
+
+``` r
+train.pred <- predict(tune.poly$best.model, newdata = dat.train)
+table(predict = train.pred, truth = dat.train$Purchase)
+```
+
+    ##        truth
+    ## predict  CH  MM
+    ##      CH 451  74
+    ##      MM  43 232
+
+``` r
+test.pred <- predict(tune.poly$best.model, newdata = dat.test)
+table(predict = test.pred, truth = dat.test$Purchase)
+```
+
+    ##        truth
+    ## predict  CH  MM
+    ##      CH 147  29
+    ##      MM  12  82
+
+The training and test error: (74 + 43)/800 = 0.146, and (29 + 12)/270 = 0.152.
+
+8h
+--
+
+Overall, which approach seems to give the best results on this data?
+
+The polynomial kernel with `cost = 10` and `degree = 2` give the best results (lowest training and test errors).
