@@ -75,10 +75,191 @@ cumsum(v)
 
 ## K-Means Clustering
 
+Build clustering dataset:
+```{r}
+set.seed(2)
+x <- matrix(rnorm(50 * 2), ncol = 2)
+x[1:25, 1] <- x[1:25, 1] + 3
+x[1:25, 2] <- x[1:25, 2] - 4
+plot(x)
+```
 
+Clustering with K-Means:
+```{r}
+km.out <- kmeans(x, 2, nstart = 20)
+km.out$cluster
+```
 
+What does the parameter *nstart* mean?
+It's the random sets number in algorithm 10.1, which is studied in the following codes.
 
+Plot the clusters:
+```{r}
+plot(x, col = (km.out$cluster + 1), main = 'K-Means clustering Result with K = 2', xlab = '', ylab = '', pch = 20, cex = 2)
+```
 
+Clustering with `K = 3`:
+```{r}
+set.seed(4)
+km.out <- kmeans(x, 3, nstart = 20)
+km.out
+```
+
+Compare clustering results using different *nstart* values:
+```{r}
+set.seed(3)
+km.out <- kmeans(x, 3, nstart = 1)
+km.out$tot.withinss
+
+km.out <- kmeans(x, 3, nstart = 20)
+km.out$tot.withinss
+```
+
+As *km.out$tot.withinss* is the total within-cluster sum of squares, which we seek to minimize by performing K-means clustering (Equation 10.11), the results above shows that `nstart = 20` gives better result than `nstart = 1`.
+
+Here the `set.seed()` function assure that the initial cluster assignments in Step 1 of algorithm 10.1 can be replicated, and the K-means output will be fully reproducible.
 
 ## Hierarchical Clustering
+
+Hierarchical clustering using complete linkage:
+```{r}
+hc.complete <- hclust(dist(x), method = 'complete')
+hc.average <- hclust(dist(x), method = 'average')
+hc.single <- hclust(dist(x), method = 'single')
+par(mfrow = c(1,3))
+plot(hc.complete, main = 'Complete linkage', xlab = '', ylab = '', sub = '', cex = .9)
+plot(hc.average, main = 'Average linkage', xlab = '', ylab = '', sub = '', cex = .9)
+plot(hc.single, main = 'Single linkage', xlab = '', ylab = '', sub = '', cex = .9)
+```
+
+Determine the cluster labels for each observation associated with a given cut of the dendrogram with the `cutree()` function:
+```{r}
+cutree(hc.complete, 2)
+cutree(hc.average, 2)
+cutree(hc.single, 2)
+```
+
+`hc.single` gave wrong results.
+
+Cut the tree with 4:
+```{r}
+cutree(hc.single, 4)
+```
+
+To scale the variables before performing hierarchical clustering of the observations, we use the `scale()` function:
+```{r}
+xsc <- scale(x)
+plot(hclust(dist(xsc), method = 'complete'), main = 'Hierarchical clustering with scaled features')
+```
+
+Clustering with correlation-based distance:
+```{r}
+x <- matrix(rnorm(30 * 3), ncol = 3)
+dd <- as.dist(1 - cor(t(x)))
+plot(hclust(dd, method = 'complete'), main = 'Complete linkage with correlation-based distance', xlab = '', sub = '')
+```
+
+# Lab 3: NCI60 Data Example
+
+The dataset contains 64 observations, each has 6830 features:
+```{r}
+library(ISLR)
+nci.labs <- NCI60$labs
+nci.data <- NCI60$data
+dim(nci.data)
+nci.labs[1:4]
+table(nci.labs)
+```
+
+## PCA on the NCI60 Data
+
+Perform PCA on the dataset with scale:
+```{r}
+pr.out <- prcomp(nci.data, scale. = TRUE)
+```
+
+Build a color function, each color for a unique cancer type:
+```{r}
+cols <- function(vec) {
+  colset <- rainbow(length(unique(vec)))
+  return(colset[as.numeric(as.factor(vec))])
+}
+```
+
+Plot the first 3 principal component score vectors(PC1 vs PC2, PC1 vs PC3):
+```{r}
+par(mfrow = c(1,2))
+plot(pr.out$x[, 1:2], col = cols(nci.labs), pch = 19, xlab = "Z1", ylab = "Z2")
+plot(pr.out$x[, c(1,3)], col = cols(nci.labs), pch = 19, xlab = "Z1", ylab = "Z3")
+```
+
+Print the summary of the PVE PCs (in the second of third line):
+```{r}
+summary(pr.out)
+```
+
+Plot the PVE:
+```{r}
+plot(pr.out)
+```
+
+Plot the PVE of each PC:
+```{r}
+pve <- 100 * pr.out$sdev ^ 2 / sum(pr.out$sdev ^ 2)
+par(mfrow = c(1,2))
+plot(pve, type = 'o', ylab = 'PVE', xlab = 'Principal Component', col = 'blue')
+plot(cumsum(pve), type = 'o', ylab = 'Cumulative PVE', xlab = 'Principal Component', col = 'brown3')
+```
+
+There's an *elbow* at about the 7th PC. The first 7 PCs explained about 40% of the variances.
+
+## Clustering the Observations of the NCI60 Data
+
+Standardize the clustered data and perform hierarchical clustering with different linkage methods and euclidean distance as the dissimilarity measure:
+```{r}
+sd.data <- scale(nci.data)
+par(mfrow = c(1,3))
+data.dist <- dist(sd.data)
+plot(hclust(data.dist), labels = nci.labs, main = 'Complete Linkage', xlab = '', ylab = '', sub = '')
+plot(hclust(data.dist, method = 'average'), labels = nci.labs, main = 'Average Linkage', xlab = '', ylab = '', sub = '')
+plot(hclust(data.dist, method = 'single'), labels = nci.labs, main = 'Single Linkage', xlab = '', ylab = '', sub = '')
+```
+
+Complete linkage generates more balanced dendrogram.
+
+Use the complete linkage, and cut the tree with 4 clusters:
+```{r}
+hc.out <- hclust(data.dist)
+hc.clusters <- cutree(hc.out, 4)
+table(hc.clusters, nci.labs)
+```
+
+Plot the cut on the dendrogram that produces these four clusters:
+```{r}
+par(mfrow = c(1,1))
+plot(hc.out, labels = nci.labs)
+abline(h = 139, col = 'red')
+```
+
+Brief summary of the clustering result:
+```{r}
+hc.out
+```
+
+Compare K-Means and hierarchical clustering (HC) with `K=4`:
+```{r}
+set.seed(2)
+km.out <- kmeans(sd.data, 4, nstart = 20)
+table(km.out$cluster, hc.clusters)
+```
+
+Cluster no.2 of K-Means is the no.3 cluster of HC, no.3 of K-Means is no.1 of HC.
+While the other 2 clusters of K-Means spread in more than 1 clusters in HC respectively.
+
+Perform HC on the first 5 PCs instead of the full dataset:
+```{r}
+hc.out <- hclust(dist(pr.out$x[ , 1:5]))
+plot(hc.out, labels = nci.labs, main = 'HC on First 5 Score Vectors')
+table(cutree(hc.out, 4), nci.labs)
+```
 
