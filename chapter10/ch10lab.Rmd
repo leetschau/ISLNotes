@@ -1,0 +1,84 @@
+---
+title: "Lab of Chapter 10"
+
+output:
+  github_document:
+    pandoc_args: --webtex
+    html_preview: false
+    toc: true
+    toc_depth: 3
+
+---
+
+# Lab 1: Principal Component Analysis
+
+Calculate mean and variance of each feature of *USArrests* data set:
+```{r}
+row.names(USArrests)
+names(USArrests)
+apply(USArrests, 2, mean)
+apply(USArrests, 2, var)
+```
+
+Perform PCA on this data set with standardization beforehand:
+```{r}
+pr.out <- prcomp(USArrests, scale. = TRUE)
+names(pr.out)
+```
+
+Note there is a dot after the `scale` in the parameter name of function `prcomp()`.
+
+List mean and standard deviation of each feature (which are used to *standardize* a vector):
+```{r}
+pr.out$center
+pr.out$scale
+```
+
+Note these results are exactly the same with above calculations with `apply()`, for a vector's *standard deviation* is the square root of its *variance*.
+
+The result of `prcomp()` also has a `sdev` output (see `pr.out$sdev`), which is the standard deviation of the principal components instead of origin features.
+
+List the *loading vectors* (each column defines a coordinate axis that the origin features have maximum variance on it):
+```{r}
+pr.out$rotation
+```
+
+Study the principal component score vectors:
+```{r}
+dim(pr.out$x)
+biplot(pr.out, scale = 0)
+```
+
+Notice that this figure is a mirror image of Figure 10.1.
+But their meaning keep the same: *Murder*, *Assault* and *Rape* are the (equal) dominant of PC1, while *UrbanPop* is the dominant of PC2.
+
+The variance explained by each principal component (PC) is obtained by squaring the standard deviation of each PC. Hence we can get the *PVE* of this group PCs:
+```{r}
+pr.var <- pr.out$sdev ^ 2
+pve <- pr.var / sum(pr.var)
+pve
+```
+
+So the ﬁrst principal component explains 62.0 % of the variance in the data, the next principal component explains 24.7 % of the variance, and so forth. We can plot the PVE explained by each component, as well as the cumulative PVE, as follows:
+```{r}
+plot(pve, xlab = "Principal Component", ylab = "Proportion of Variance Explained (PVE)", ylim = c(0,1), type = 'b')
+plot(cumsum(pve), xlab = 'Principal Component', ylab = "Cumulative Proportion of Variance Explained", ylim = c(0,1), type = 'b')
+```
+
+Finally a demo for function `cumsum()`:
+```{r}
+v <- c(1, 3, 5, 20, -5)
+cumsum(v)
+```
+
+# Lab 2: Clustering
+
+## K-Means Clustering
+
+
+
+
+
+
+## Hierarchical Clustering
+
