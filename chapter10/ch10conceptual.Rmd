@@ -1,0 +1,104 @@
+---
+title: "Conceptual Exercises of Chapter 10"
+
+output:
+  github_document:
+    pandoc_args: --webtex
+    html_preview: false
+    toc: true
+    toc_depth: 3
+---
+
+# Question 1
+
+## 1a
+
+Prove (10.12):
+$$
+\frac1{|C_k|} \sum_{i,i' \in C_k} \sum_{j=1}^p (x_{ij} - x_{i'j}) ^ 2
+= 2 \sum_{i \in C_k} \sum_{j=1}^p (x_{ij} - \bar x_{kj}) ^ 2
+$$
+
+其中：
+$$
+\bar x_{kj} = \frac1{|C_k|} \sum_{i \in C_k} x_{ij}
+$$
+
+证明：
+
+等式左边引入 $\bar x_{kj}$ 项并展开：
+$$
+\frac1{|C_k|} \sum_{i,i' \in C_k} \sum_{j=1}^p (x_{ij} - x_{i'j}) ^ 2 \\
+
+= \frac1{|C_k|} \sum_{i,i' \in C_k} \sum_{j=1}^p [(x_{ij} - \bar x_{kj}) - (x_{i'j} - \bar x_{kj})] ^ 2 \\
+
+= \frac1{|C_k|} \sum_{i,i' \in C_k} \sum_{j=1}^p [(x_{ij} - \bar x_{kj}) ^ 2 + (x_{i'j} - \bar x_{kj}) ^ 2 - 2 (x_{ij} - \bar x_{kj})(x_{i'j} - \bar x_{kj})] \\
+
+= \frac1{|C_k|} \sum_{i,i' \in C_k} \sum_{j=1}^p (x_{ij} - \bar x_{kj}) ^ 2 + \frac1{|C_k|} \sum_{i,i' \in C_k} \sum_{j=1}^p (x_{i'j} - \bar x_{kj}) ^ 2 - \frac2{|C_k|} \sum_{i,i' \in C_k} \sum_{j=1}^p (x_{ij} - \bar x_{kj})(x_{i'j} - \bar x_{kj})  \tag{1}
+$$
+
+由于
+$$
+\frac1{|C_k|} \sum_{i,i' \in C_k} \sum_{j=1}^p (x_{ij} - \bar x_{kj}) ^ 2
+$$
+
+实际上是
+$$
+\frac1{|C_k|} \sum_{i=1}^{C_k} \sum_{i'=1}^{C_k} \sum_{j=1}^p (x_{ij} - \bar x_{kj}) ^ 2
+$$
+
+且 $(x_{ij} - \bar x_{kj}) ^ 2$ 与 $i'$ 无关，所以有：
+$$
+\frac1{|C_k|} \sum_{i,i' \in C_k} \sum_{j=1}^p (x_{ij} - \bar x_{kj}) ^ 2 \\
+
+= \frac{|C_k|}{|C_k|} \sum_{i=1}^{C_k} \sum_{j=1}^p (x_{ij} - \bar x_{kj}) ^ 2 \\
+
+= \sum_{i=1}^{C_k} \sum_{j=1}^p (x_{ij} - \bar x_{kj}) ^ 2
+$$
+
+对于 $i'$ 项的处理与上面相同，两项将下标统一为 $i$ 后值相同，可以合并，再代入(1)式得：
+$$
+\frac1{|C_k|} \sum_{i,i' \in C_k} \sum_{j=1}^p (x_{ij} - x_{i'j}) ^ 2 \\
+
+= 2\sum_{i=1}^{C_k} \sum_{j=1}^p (x_{ij} - \bar x_{kj}) ^ 2 - \frac2{|C_k|} \sum_{i,i' \in C_k} \sum_{j=1}^p (x_{ij} - \bar x_{kj})(x_{i'j} - \bar x_{kj})   \tag{2}
+$$
+
+我们看上式中第2项：
+$$
+\sum_{i,i' \in C_k} \sum_{j=1}^p (x_{ij} - \bar x_{kj})(x_{i'j} - \bar x_{kj}) \\
+
+= \sum_{i=1}^{C_k} \sum_{i'=1}^{C_k} \sum_{j=1}^p (x_{ij} - \bar x_{kj})(x_{i'j} - \bar x_{kj}) \\
+
+= \sum_{j=1}^p \sum_{i=1}^{C_k} \sum_{i'=1}^{C_k} (x_{ij} - \bar x_{kj})(x_{i'j} - \bar x_{kj}) \\
+
+= \sum_{j=1}^p \sum_{i=1}^{C_k} \left[ |C_k| (x_{ij} - \bar x_{kj}) \sum_{i'=1}^{C_k} (x_{i'j} - \bar x_{kj}) \right]  \tag{3}
+$$
+
+
+结合 $\bar x_{kj}$ 的定义，可知上式中：
+$$
+\sum_{i'=1}^{C_k} (x_{i'j} - \bar x_{kj}) 
+
+= \sum_{i'=1}^{C_k} x_{i'j} - \sum_{i'=1}^{C_k} \bar x_{kj} 
+
+= 0
+$$
+
+所以式 (3) 的值为0，再代入式 (2)，正是书中 (10.12) 式。
+
+证明式 (3) 恒等于0的 R 验证：
+```{r}
+subprodsum <- function(inp) {
+  m <- mean(inp)
+  x1 <- inp - m
+  x2 <- inp - m
+  df <- expand.grid(x1 = x1, x2 = x2)
+  df$y <- df$x1 * df$x2
+  return(sum(df$y))
+}
+
+subprodsum(c(1.764, 3.22, 87.22, 232, 29.223, 100.92))
+subprodsum(rnorm(100, mean = 5, sd = 8))
+subprodsum(runif(33, 3, 8))
+```
+

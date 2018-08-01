@@ -7,7 +7,6 @@ output:
     html_preview: false
     toc: true
     toc_depth: 3
-
 ---
 
 # Lab 1: Principal Component Analysis
