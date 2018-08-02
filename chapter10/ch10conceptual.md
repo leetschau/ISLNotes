@@ -3,6 +3,8 @@ Conceptual Exercises of Chapter 10
 
 -   [Question 1](#question-1)
     -   [1a](#a)
+    -   [1b](#b)
+-   [Question 2](#question-2)
 
 Question 1
 ==========
@@ -101,10 +103,18 @@ subprodsum(c(1.764, 3.22, 87.22, 232, 29.223, 100.92))
 subprodsum(rnorm(100, mean = 5, sd = 8))
 ```
 
-    ## [1] 3.114731e-13
+    ## [1] 1.450506e-13
 
 ``` r
 subprodsum(runif(33, 3, 8))
 ```
 
-    ## [1] 6.111431e-15
+    ## [1] 1.16053e-15
+
+1b
+--
+
+算法10.1每次迭代的第2b步，以离点A最近的质心 ![x\_{km}](https://latex.codecogs.com/png.latex?x_%7Bkm%7D "x_{km}") 代替原来的质心 ![x\_{kq}](https://latex.codecogs.com/png.latex?x_%7Bkq%7D "x_{kq}")，意味着式 (10.12) 右侧 ![\\sum\_{j=1}^p (x\_{ij} - \\bar x\_{kj}) ^2](https://latex.codecogs.com/png.latex?%5Csum_%7Bj%3D1%7D%5Ep%20%28x_%7Bij%7D%20-%20%5Cbar%20x_%7Bkj%7D%29%20%5E2 "\sum_{j=1}^p (x_{ij} - \bar x_{kj}) ^2") 一定会减小，从而保证式 (10.11) 随着迭代的进行而不断减小。
+
+Question 2
+==========
