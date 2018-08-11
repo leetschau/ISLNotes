@@ -24,7 +24,32 @@
 
 随机误差存在的原因：未被纳入的特征、无法观测的特征。
 
-严格定义：式(2.3)
+式(2.1)后面第一段中说明了 $\epsilon$ 独立于 $X$ 且均值为0，
+即 $E(\epsilon) = 0$。
+
+严格定义：式(2.3)，证明如下
+（参考 [Math Derivation - Reducible and Irreducible Error in Statistical Learning](https://www.youtube.com/watch?v=A83LNKCoB0U)）：
+$$ E(Y - \hat Y) ^ 2 = E[f(X) + \epsilon - \hat f(X)] ^ 2 $$
+
+令 $e_r = f(X) - \hat f(X)$，且 $E(X + Y) = E(X) + E(Y)$，有：
+$$
+E(Y - \hat Y) ^ 2 \\ = E(e_r + \epsilon) ^ 2 \\
+= E(e_r^2 + 2  e_r \epsilon + \epsilon ^ 2) \\
+= E(e_r^2) + E(2 e_r \epsilon) + E(\epsilon^2)
+$$
+
+上式中第一项，$e_r$的两个组成部分都是确定值，由于确定值的期望是其自身，
+所以 $E(e_r) = e_r$；
+
+第二项，对于独立的两个随机变量 $X$ 和 $Y$，有 $E(X \cdot Y) = E(X) E(Y)$，
+所以第二项变为 $2 E(e_r) E(\epsilon)$，
+根据定义 $E(\epsilon) = 0$，所以第二项变为0；
+
+第三项，由于 $Var(X) = E(X^2) - (E(X)) ^ 2$，所以：
+$$E(\epsilon^2) = Var(\epsilon) - (E(\epsilon)) ^ 2 = Var(\epsilon)$$
+
+综上可得式 (2.3)：
+$$ E(Y - \hat Y) ^ 2 = [f(X) - \hat f(X)] ^ 2 + Var(\epsilon)$$
 
 随机误差定义了算法精度的上限，实践中往往是未知的。
 
