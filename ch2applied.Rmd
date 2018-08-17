@@ -8,25 +8,27 @@ output: html_notebook
 # Question 8
 
 ## 8a, 8b
-Lload the data from csv file, and remove *college name* column:
+
+Load the data from csv file, and remove *college name* column:
 ```{r}
-rawdata <- read.table('data/College.csv', header = TRUE, sep = ',')
+rawdata <- read.table('data/College.csv', header = TRUE, sep = ',', quote = '')
+# here `quote = ''` is mandatory, or the single quote in the source file will be misinterpreted
 head(rawdata)
 college <- rawdata
-rownames(college) <- college[,1]
-college <- college[,-1]
+rownames(college) <- college[,1]  # overwrite the row names with the values in the first column
+college <- college[,-1]           # remove the first column (which has been set as row names)
 head(college)
 ```
 
 ## 8c
+
 i ~ iii:
 ```{r}
 summary(college)
-
 pairs(college[,1:10])
-
 plot(college$Private, college$Outstate)
 ```
+
 iv:
 ```{r}
 college$Elite = "No"
@@ -35,6 +37,7 @@ college$Elite = as.factor(college$Elite)
 summary(college$Elite)  # there are 27 Elite colleges here
 plot(college$Elite, college$Outstate)
 ```
+
 v:
 ```{r}
 par(mfrow=c(2,2))
@@ -45,6 +48,7 @@ hist(college$Expend, breaks = 100)
 ```
 
 # Question 9
+
 Make sure the *ISLR* library is installed.
 Or install it with `install.packages("ISLR")`.
 ```{r}
@@ -53,13 +57,16 @@ data("Auto")
 head(Auto)
 str(Auto)
 ```
+
 ## 9a
+
 Quantitative predictors:
 mpg, cylinder, displacement, horsepower, weight, acceleration, year.
 
 Qualitative predictors: origin, name.
 
 ## 9b ~ 9d
+
 ```{r}
 # (b)
 sapply(Auto[,1:7], range)
@@ -74,7 +81,9 @@ sapply(sbset[,1:7], range)
 sapply(sbset[,1:7], mean)
 sapply(sbset[,1:7], sd)
 ```
+
 ## 9e
+
 ```{r}
 pairs(Auto)
 plot(Auto$weight, Auto$mpg)
@@ -83,10 +92,13 @@ The plot shows that with the increasing of the weight, the mpg is decrease.
 In other words, lighter cars are more energy effective.
 
 ## 9f
+
 Learn from the output graph of `pairs(Auto)` above.
 
 # Question 10
+
 ## 10a ~ 10c
+
 ```{r}
 # (a)
 library(MASS)
@@ -98,30 +110,36 @@ pairs(Boston)
 # (c)
 plot(Boston$age, Boston$crim)
 ```
+
 Older house with more crime.
 
 ## 10d
+
 ```{r}
 library(dplyr)
 head(arrange(Boston, desc(crim)))
 ```
 
 ## 10e
+
 ```{r}
 nrow(Boston[Boston$chas > 0,])
 ```
 
 ## 10f
+
 ```{r}
 median(Boston$ptratio)
 ```
 
 ## 10g
+
 ```{r}
 subset(Boston, medv == min(Boston$medv))
 ```
 
 ## 10h
+
 ```{r}
 nrow(Boston[Boston$rm > 7,])
 summary(subset(Boston, rm > 8))

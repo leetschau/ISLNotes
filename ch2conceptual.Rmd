@@ -22,14 +22,46 @@ output: html_notebook
 (c) Regression, prediction, n=52 (how many weeks in 2012), p=3;
 
 # Question 3
-(a) See fig 2.9 for pattern of training MSE and test MSE when flexibility increase. See fig. 2.12 for pattern of variance, bias and test MSE when flexibility increase.
+
+## 3a
+See fig 2.9 for pattern of training MSE and test MSE when flexibility increase. See fig. 2.12 for pattern of variance, bias and test MSE when flexibility increase.
+
+## 3b
+
+Squared bias decreases monotonically because increases in flexibility yield a closer fit.
+
+Variance increases monotonically because increases in flexibility yield overfit.
+
+Training error decreases monotonically because increases in flexibility yield a closer fit.
+
+Test error concave up curve because increase in flexibility yields a closer fit before it overfits.
+
+Bayes irreducible error don't change according to the flexibility.
+
+All above five lines are always positive (whose values are greater than 0).
 
 # Question 5
+
 For prediction, use flexible method, with enough observations to avoid overfit.
 
 For inference, use a less flexible approach, while the bias may be high.
 
+# Question 6
+
+A parametric approach reduces the problem of estimating $f$ down to a set of parameters,
+which defines the form for f.
+
+A non-parametric approach does not assume a functional form of $f$,
+hence requires a very large number of observations to accurately estimate it.
+
+The advantages of parametric methods are the simplification of modeling $f$.
+And less observations are required compared to non-parametric methods.
+
+The disadvantages of parametric methods are potential to inaccurately estimate $f$
+if the form of $f$ assumed is wrong, or overfitting the observations if more flexible model used.
+
 # Question 7
+
 (a) $3, 2, \sqrt{10}, \sqrt5, \sqrt2, \sqrt3$
 
 (b) Green, for the minimum of results in *(a)* above is $\sqrt2$
