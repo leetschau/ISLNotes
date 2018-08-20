@@ -340,23 +340,49 @@ confint(f13i)
 We can see that as the noises in the observations increase, the confidence intervals become much wider, but the mean value keep the same.
 
 # Question 14
+
 ## 14a
+
+Perform the following commands in R:
 ```{r}
 set.seed(1)
 x1 <- runif(100)
 x2 <- 0.5 * x1 + rnorm(100) / 10
 y <- 2 + 2 * x1 + 0.3 * x2 + rnorm(100)
 ```
-The linear model is $y = 2 + 2x_1 + 0.3x_2 + \epsilon$.
-The coefficients are: $\beta_0 = 2$, $\beta_1 = 2$, $\beta_2 = 0.3$.
+
+The last line corresponds to creating a linear model in which $y$ is a function of $x1$ and $x2$.
+Write out the form of the linear model. What are the regression coefficients?
+
+The linear model is:
+$$
+y = 2 + 2x_1 + 0.3x_2 + \epsilon
+$$
+
+The coefficients are:
+$$
+\beta_0 = 2 \\
+\beta_1 = 2 \\
+\beta_2 = 0.3
+$$
 
 ## 14b
+
+What is the correlation between x1 and x2?
+Create a scatterplot displaying the relationship between the variables.
+
 ```{r}
 cor(x1, x2)
 plot(x1, x2)
 ```
 
 ## 14c
+
+Using this data, fit a least squares regression to predict $y$ using $x1$ and $x2$.
+Describe the results obtained. What are $\hat \beta_0$, $\hat \beta_1$, and $\hat \beta_2$?
+How do these relate to the true $\beta_0$, $\beta_1$, and $\beta_2$?
+Can you reject the null hypothesis $H_0 : \beta_1 = 0$?
+How about the null hypothesis $H_0 : \beta_2 = 0$?
 ```{r}
 f14c <- lm(y ~ x1 + x2)
 summary(f14c)
@@ -367,6 +393,9 @@ $\hat\beta_1$ and $\hat\beta_2$ are both far from the true coefficients (2 and 0
 From the p-values of the t-statistic(0.0487 and 0.3754), we can't reject the null hypothesis of $\beta_1 = 0$ and $\beta_2 = 0$ (for 0.0487 is so close to 0.05).
 
 ## 14d
+
+Now fit a least squares regression to predict $y$ using only $x1$.
+Comment on your results. Can you reject the null hypothesis $H_0 : \beta_1 = 0$?
 ```{r}
 f14d <- lm(y ~ x1)
 summary(f14d)
@@ -374,6 +403,9 @@ summary(f14d)
 Accroding to the p-value of t-statistic, we can reject the $H_0$ hypothesis.
 
 ## 14e
+
+Now fit a least squares regression to predict $y$ using only $x2$.
+Comment on your results. Can you reject the null hypothesis $H_0 : \beta_1 = 0$?
 ```{r}
 f14e <- lm(y ~ x2)
 summary(f14e)
@@ -381,15 +413,29 @@ summary(f14e)
 Accroding to the p-value of t-statistic, we can reject the $H_0$ hypothesis.
 
 ## 14f
+
+Do the results obtained in (c)–(e) contradict each other? Explain your answer.
+
 No. The results don't contradict each other.
 Because when the independent variables are correlated to each other,
 they can't be fitted with linear regression model.
 
 ## 14g
+
+Now suppose we obtain one additional observation, which was unfortunately mismeasured.
+
 ```{r}
 x1n <- c(x1, 0.1)
 x2n <- c(x2, 0.8)
 yn <- c(y, 6)
+```
+
+Re-fit the linear models from (c) to (e) using this new data.
+What effect does this new observation have on the each of the models?
+In each model, is this observation an outlier? A high-leverage point? Both?
+Explain your answers.
+
+```{r}
 f14g <- lm(yn ~ x1n + x2n)
 summary(f14g)
 par(mfrow=c(2,2))
@@ -397,6 +443,7 @@ plot(f14g)
 par(mfrow=c(1,1))
 plot(predict(f14g), rstudent(f14g))
 ```
+
 This observation disturbs the relationship between $y$ and $x1$, $x2$ severely.
 The coefficients become more far from the true values.
 From these plots we can see, it is both outlier and with high-leverage.
@@ -408,6 +455,7 @@ par(mfrow=c(2,2))
 plot(f14g2)
 par(mfrow=c(1,1))
 plot(predict(f14g2), rstudent(f14g2))
+points(predict(f14g2)[101], rstudent(f14g2)[101], col = 'red', cex = 2, pch = 3)
 ```
 The $x1n$ has no statistical relation with $y$ because of the 101th observation.
 From these plots we can see, this observation is both outlier and with high-leverage.
