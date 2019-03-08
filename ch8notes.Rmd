@@ -1,0 +1,250 @@
+---
+title: "第8章笔记"
+output: html_notebook
+---
+
+名称（Tree-Baed methods）的由来：
+
+> Since the set of splitting rules used  to **segment the predictor space** can be summarized in a tree, these types of  approaches are known as **decision tree** methods.
+
+对于线性问题，树方法的解释性（什么叫模型的可解释性？解释性与模型的哪一个性质一般要做 trade-off？）非常好，但不如增强型线性回归预测精度高，例如第6章的 Ridge regression, LASSO，第7章的多项式和样条回归，（各自的思想是什么？），为了提高预测精度，在基本树方法的基础上又发展出 bagging ,random forest, boosting，以牺牲解释性（和增加计算成本）为代价，提升预测精度。
+
+# 8.1 树方法原理
+
+首先介绍回归树，然后是分类树。
+
+设一个回归树叶子节点的父节点到根节点依次是 $A, B, C$，则这个叶子节点的限定条件是：
+$A \cap B \cap C$，例如：$age > 35 \cap sex = female \cap height < 175$.
+
+## 8.1.1 回归树
+
+图8-1：决策树从上至下解读，越上面的节点重要性（影响程度）越高。
+
+图8-2：决策树的解释性优点。
+
+相关概念：
+
+* terminal nodes, leaf;
+
+* internal node;
+
+* branch;
+
+### 通过分割特征空间做预测
+
+计算过程：
+
+1. 在 $p$ 维空间上将所有训练观测点分割为 $J$ 个盒子 (box);
+
+1. 每个盒子内观测点的预测值是此盒子内所有训练观测点相应变量的平均值。
+
+1. 找到让 RSS，即式 (8-1) 最小的分割方法。
+
+1. 确定分割方法后，取每个盒子内训练数据响应变量平均值作为测试数据的预测值；
+
+实现算法 recursive binary splitting：
+
+* top-down: 一次确定一个分割特征；
+
+* greedy: 只考虑本次分割最优解；
+
+一次分割过程：
+
+1. 在第1个特征 $X_1$ 的值域内移动分割线 $s$，得到式 (8.3) 最小值 $RSS_1$ 和对应的 $s$；
+
+1. 在第 j ($j \in 2 .. p$) 个特征 $X_j$ 做同样的操作；
+
+1. 取 $RSS_j$ 最小值作为本次分割的最佳 $(j, s)$ 组合；
+
+第一次分割后，选择两个分区中的一个（选择标准是什么？）重复上述过程，直到满足某个停止准则，例如每个分区内的观测点数都小于5。
+
+### 树修剪
+
+式 (8.4) 的含义：每个盒子 ($\sum^{|T|}_{m=1}$) 内的 RSS值 ($\sum_{x_i \in R_m}$) 之和。
+注意式 (8.4) 与 LASSO 的相似之处。
+
+当所有观测不做任何划分时， 式 (8.1) 的值是 $\sum_{i = 1}^n (y_i - \bar y) ^2$；
+当为每个观测划分一个box（整个树包含 $n$ 个box）时， 式 (8.1)  的值为0（因为此box里的平均值就是自己）。
+
+这二者之间，从没有划分的原始状态开始每次 split box，式 (8.1) 会有一定的下降，但 $T_0$ 上叶子节点的 式 (8.4) 的值会高于中间分叉上响应的值，也就是式 (8.4) 的最小值会出现在某个中间节点上，此分叉点的子节点就被修剪掉了（因为子节点的式(8.4)值大于它们父节点的值）。
+
+### 基于交叉验证的回归树生成过程
+
+1. 按照式 (8.2) 和 (8.3) 所述过程生成最大回归树 $T_0$，直到所有节点包含的观测数小于某个阈值时停止；
+
+1. 对 $T_0$ 的每个子树，设式 (8.4) 的值为 $RN$，得到函数 $RN = f(\alpha)$（ 下面 *子树示例* 一节给出了包含3棵子树的例子）；
+
+1. 使用 K-fold cross-validation 确定 $\alpha$ 的值： 将完整训练数据分为 $K$ 份，对于每一个 $k = 1, \dots, K$，执行下面的处理，共执行 $K$ 次，得到 $RN_1(\alpha), \dots, RN_K(\alpha)$，取平均值得到 $\bar{RN}(\alpha)$，取 $\bar{RN}$ 的最小值对应的 $\alpha$ 作为 $\alpha$ 的最优解：
+    i. 用除了第 $k$ 份的 $K-1$ 份数据作为训练集完成第1、2步；
+    i. 将第 $k$ 份作为测试数据，计算本轮的test MSE ($RN_k(\alpha)$)；
+
+1. 将上面确定的 $\alpha$ 值，根据第2步中最小 $RN$ 对应的子树作为最终结果。
+
+---
+
+**思考**：
+下面关于步骤1生成 $T_0$ 树的论述哪个正确？
+假设对所有训练数据进行第一次分割后生成了 $R_1$ 和 $R_2$ 两个盒子，现在要做第二次分割，生成 $R_{11}$, $R_{12}$, $R_{21}$ 和 $R_{22}$ 四个盒子。
+
+A: 由于新节点只会在层数最深的节点上出现，在树的生长过程中，浅层节点中的观测数量不变，所以用“观测数小于阈值”作为算法停止的标准，可能导致算法无法结束，应该用 information gain 是否大于零作为迭代终止条件。
+
+B: 由于 $R1$ 和 $R2$ 中的观测点数不同，对比 $RSS_{R11} + RSS_{R12}$ 和 $RSS_{R21} + RSS_{R22}$ 是没有意义的，所以任何一个盒子都可以继续分割，新节点可以出现在任何一个叶子节点上，使用最小观测点数是合理的迭代终止条件。
+
+---
+
+在回归树的生成过程中，$\alpha$ 通过改变 $RN$ 的值生成不同的子树，不（直接）参与此子树的 test MSE 的计算。
+
+回归树的Python实现参考 [treepredict.py](https://github.com/leetschau/Programming-Collective-Intelligence/blob/master/chapter7/treepredict.py)。
+
+### 子树示例
+
+假设回归树 $T_0$ 包含了3棵子树，其残差 $\sum_{m=1}^{\vert T \vert} \sum_{i: x_i \in R_m} (y_i - \hat y_{R_m}) ^ 2$ 分别为 $R_1, \, R_2, \, R_3$，包含的分区（box）数 $\vert T \vert$ 分别为：3, 5, 12：
+$$
+RN_1 = R_1 + 3 \alpha \\
+RN_2 = R_2 + 5 \alpha \\
+RN_3 = R_3 + 12 \alpha
+$$
+
+绘制函数图像：
+```{r}
+alpha <- seq(0, 0.8, by = 0.2)
+R1 <- 5.7
+R2 <- 4.6
+R3 <- 2.8
+
+RN1 <- R1 + 3 * alpha
+RN2 <- R2 + 5 * alpha
+RN3 <- R3 + 12 * alpha
+
+plot(alpha, RN1, type = 'l', col = 'red', xlab = expression(alpha), ylab = 'RN', ylim = c(3, 8))
+lines(alpha, RN2, col = 'blue')
+lines(alpha, RN3, col = 'green')
+legend('bottomright', legend = c('subtree1', 'subtree2', 'subtree3'),  
+  lty = c(1, 1, 1), col = c('red', 'blue', 'green'))
+```
+
+可以看到随着 $\alpha$ 的增加，$RN$ 最小的线依次是 subtree3, subtree2 和 subtree1，
+叶子节点多的子树 subtree3  $RN$ 上升速度最快。
+
+------
+
+对于图 8.5，首先将 *Hitters* 数据集随机分为两部分，其中训练集 $S1$ 包含132个观测，测试集 $S2$ 包含131个观测。
+再将 $S1$ 分为6份用来做 cross-validation，其中训练集 $S3$ 包含110个观测，测试集 $S4$ 包含22个观测，且 $S1 = S3 \cup S4$。
+图上的3条曲线中，绿色线表示在 $S4$ 上计算得到的 test MSE，橙色线表示在 $S2$ 上计算得到的 test MSE，黑色线表示在 $S1$ 上计算得到的 training MSE.
+
+随着 $\alpha$ 的增加，$\vert T \vert$不断降低，所以图 8.5 的横轴也是 $\alpha$ 不断减小到0的过程。
+
+## 8.1.2 分类树
+
+分类场景中起 RSS 作用的是分类错误率 $E$，定义见式 (8.5)，
+其中 $\hat p_{mk}$ 表示第 m 个叶子节点中属于第 $k$ 个分类的观测数与 $m$ 中所有观测数的比值，例如某棵树第 3 个节点中的 $Y$ 包含6个值：4, 5, 2, 4, 5, 5，则 $\hat y_{31} = 2/6$，即观测值 4 的个数（2个）与总观测数（6个）的比值，类似有 $\hat p_{32} = 3/6, \; \hat p_{33} = 1/6$。
+所以 $max_k (\hat p_{mk})$ 是最大成分（most commonly occurring  class）所占比例数，上例中是观测值 5 对应的比例 $\hat p_{32}$，采用主要成分作为节点预测值规则，错误率（classification error）就是除最大成份外，其他全是错的。
+
+Gini index 和 cross-entropy 表征某个节点的 *purity*，当节点中主体成分所占比重越高（越纯粹），这两个值越小。
+
+### 熵值计算示例
+
+[ Programming Collective Intelligence](http://shop.oreilly.com/product/9780596529321.do) by Toby Segaran, chapter 7, section *Entropy* 中熵值的计算函数使用 `log2()` 代替了本书式 (8.7) 中的自然对数，其他部分相同（改写自 [treepredict.py](https://github.com/leetschau/Programming-Collective-Intelligence/blob/master/chapter7/treepredict.py)）：
+```
+def uniquecounts(rows):
+    """Create a count dictonary
+    >>> uniquecounts([[0, 1], [0, 1], [3, 1], [1, 1]])
+    {1: 4}
+    >>> uniquecounts([[0, 1], [0, 2], [3, 1], [1, 2]])
+    {1: 2, 2: 2}
+    >>> uniquecounts([[0, 1], [0, 2], [3, 2], [1, 2]])
+    {1: 1, 2: 3}
+    >>> uniquecounts([[0, 1], [0, 2], [3, 3], [1, 4]])
+    {1: 1, 2: 1, 3: 1, 4: 1}
+    """
+    results = {}
+    for row in rows:
+        # The result is the last column
+        r = row[len(row) - 1]
+        if r not in results:
+            results[r] = 0
+        results[r] += 1
+    return results
+
+def entropy(rows):
+    """Sum of p(x)log(p(x)) of all values in a dict
+    >>> entropy([[0, 1], [0, 1], [3, 1], [1, 1]])
+    0.0
+    >>> entropy([[0, 1], [0, 2], [3, 1], [1, 2]])
+    1.0
+    >>> entropy([[0, 1], [0, 2], [3, 2], [1, 2]])
+    0.8112781244591328
+    >>> entropy([[0, 1], [0, 2], [3, 3], [1, 4]])
+    2.0
+    """
+    from math import log
+
+    def log2(x): return log(x) / log(2)
+    results = uniquecounts(rows)
+    ent = 0.0
+    for r in results.keys():
+        p = float(results[r]) / len(rows)
+        ent = ent - p * log2(p)
+    return ent
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
+```
+
+从docstring可知，`entropy()`的输入是一张二维表，计算此表最后一列（即响应变量$Y$）的熵值，式 (8.7) 中的 $\hat p_{mk}$ 就是此值出现的次数与整个样本的个数的比值。$Y$ 内部的值越多，entropy越高，比如例1完全一致，熵值最小（0），例2只有1和2两个取值，熵值为1，例4有1,2,3,4共4种取值时，熵值为2，不难算出，当 $Y$ 包含 $2^k$ 个取值，且每个取值出现的次数一样 时（也就是平均分布，如例1，2和4），熵值为 $k$；当取值的个数相同，但分布不均匀，如例3的 $Y$ 包含1个1和3个2，熵值介于二值平均分布和单一值之间（$0 \lt 0.8112 \lt 1.0$），这也符合熵值的定义。
+
+
+Gini index, cross-entropy 和分类错误率都可以在分类场景中作为评价分割质量的指标，前两个对节点纯度更敏感。
+三者都可以作为修剪树的方法，当以预测精度为目标修剪时，分类错误率效果最好。
+
+分类树特点：
+
+* 为什么分类树可以对 qualitative feature 分类，并且有很好的解释性？
+（参考 p312 最后一段）
+* 一个节点被分割后，两个子节点的响应值可能是一样的，这样的分割有什么意义？
+（参考 P314 第一段）
+
+## 8.1.3 树方法与线性模型
+
+使用树方法还是线性模型取决于实际问题中特征与响应变量的关系，见图 8.7。
+
+## 8.1.4 树方法的优缺点
+
+优点：
+
+* 解释性好；
+
+* 符合人类直觉；
+
+* 可以图示；
+
+* 方便地处理分类特征值；
+
+缺点：预测精度差。
+
+# 8.2 增强树方法
+
+## Bagging
+
+原始树方法 variance 很高（具体何种表现？）
+
+Bagging 基本思路：多个独立同分布的随即变量，取平均值可以显著降低方差。
+
+Bagging tree 方法：对训练数据集做 $B$  次bootstrap，生成 $B$ 个模型，综合考虑所有模型的预测值，作为最终预测结果。
+
+回归问题：取平均值；
+
+分类问题：majority vote（绝对多数）；
+
+### OOB MSE
+
+OOB: $B$ 次 bootstrap 抽样中都没有被选中的观测；
+
+对于某一个观测，一次 bootstrap 抽样大约覆盖 2/3 的样本（参考文献1），所以一次抽样中作为测试数据（未被抽中）的概率是 1/3，
+$B$ 次抽样后，有 $\frac{B}3$ 的模型将此观测作为测试数据，得到 $\frac{B}3$ 个观测结果，
+最终 OOB 预测结果是这些观测值的平均值（回归问题）或者绝对多数值（分类问题）。
+
+# 参考文献
+
+1. [Why on average does each bootstrap sample contain roughly two thirds of observations?](https://stats.stackexchange.com/questions/88980/why-on-average-does-each-bootstrap-sample-contain-roughly-two-thirds-of-observat)
