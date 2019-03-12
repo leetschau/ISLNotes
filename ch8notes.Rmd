@@ -3,7 +3,7 @@ title: "第8章笔记"
 output: html_notebook
 ---
 
-名称（Tree-Baed methods）的由来：
+名称（Tree-Based methods）的由来：
 
 > Since the set of splitting rules used  to **segment the predictor space** can be summarized in a tree, these types of  approaches are known as **decision tree** methods.
 
