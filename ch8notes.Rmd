@@ -85,7 +85,7 @@ $A \cap B \cap C$，例如：$age > 35 \cap sex = female \cap height < 175$.
 
 ---
 
-**思考**：
+**问题**：
 下面关于步骤1生成 $T_0$ 树的论述哪个正确？
 假设对所有训练数据进行第一次分割后生成了 $R_1$ 和 $R_2$ 两个盒子，现在要做第二次分割，生成 $R_{11}$, $R_{12}$, $R_{21}$ 和 $R_{22}$ 四个盒子。
 
@@ -148,7 +148,7 @@ Gini index 和 cross-entropy 表征某个节点的 *purity*，当节点中主体
 ### 熵值计算示例
 
 [ Programming Collective Intelligence](http://shop.oreilly.com/product/9780596529321.do) by Toby Segaran, chapter 7, section *Entropy* 中熵值的计算函数使用 `log2()` 代替了本书式 (8.7) 中的自然对数，其他部分相同（改写自 [treepredict.py](https://github.com/leetschau/Programming-Collective-Intelligence/blob/master/chapter7/treepredict.py)）：
-```
+```{python}
 def uniquecounts(rows):
     """Create a count dictonary
     >>> uniquecounts([[0, 1], [0, 1], [3, 1], [1, 1]])
@@ -192,7 +192,7 @@ def entropy(rows):
 
 if __name__ == "__main__":
     import doctest
-    doctest.testmod()
+    doctest.testmod(verbose=True)
 ```
 
 从docstring可知，`entropy()`的输入是一张二维表，计算此表最后一列（即响应变量$Y$）的熵值，式 (8.7) 中的 $\hat p_{mk}$ 就是此值出现的次数与整个样本的个数的比值。$Y$ 内部的值越多，entropy越高，比如例1完全一致，熵值最小（0），例2只有1和2两个取值，熵值为1，例4有1,2,3,4共4种取值时，熵值为2，不难算出，当 $Y$ 包含 $2^k$ 个取值，且每个取值出现的次数一样 时（也就是平均分布，如例1，2和4），熵值为 $k$；当取值的个数相同，但分布不均匀，如例3的 $Y$ 包含1个1和3个2，熵值介于二值平均分布和单一值之间（$0 \lt 0.8112 \lt 1.0$），这也符合熵值的定义。
