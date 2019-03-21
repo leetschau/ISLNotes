@@ -1,0 +1,148 @@
+---
+title: "ISL 第9章笔记"
+output: html_notebook
+---
+
+本章内容概览：
+
+9.1: maximal margin classifier，最基本的分割方法，只适用于线性边界；
+
+9.2: support vector classifier, 在 MMC 基础上进行了改进以提升适用范围；
+
+9.3: support vector machine, 在 SVC 基础上拓展了非线性边界的分割能力；
+
+9.4: 拓展 SVM 以满足多余两种分类的场景；
+
+9.5: SVM 与其他分类方法（例如逻辑回归）的联系；
+
+# 9.1 Maximal Margin Classifier
+
+超平面的概念：式 (9.1), (9.2)。
+
+被超平面分割的数学表示：式 (9.3), (9.4)，图示：fig 9.1.
+
+由 (9.6), (9.7) 推出 (9.8)：
+基于观测点的几何特征（一侧大于0，另一侧小于0）与响应变量的关系发现规律（都大于0），
+这是与 Tree（在特征上分割）和线性方法（预测值与实际值的差距大小）都不同的地方。
+
+优点：$f(x^*)$ 绝对值的大小反映了预测的准确性。
+图 9.2：同一个数据集上采用不同超平面分割示例。
+
+如何在无数分割超平面中选择最优解？
+*margin* （超平面与最近观测点的距离）最大的平面。
+
+隐藏假设：最大间隙超平面可以最合理地分割测试数据。
+问题：这个假设是否始终成立？
+
+图9.3：support vector machine 的 slab 图示。
+问题：什么是 support vector?
+
+MMC 特征：超平面仅由少数几个观测决定，不受其他观测影响。
+
+MMC 的计算方法：式(9.9) ~ (9.11)：
+由于第 $i$ 个观测点到超平面的垂直距离为
+$$d_i = y_i(\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \dots + \beta_p x_{ip})$$
+
+所以 $M = min(d_i), i \in [1..n]$，MMC 就是在所有超平面中找到 $M$ 最大的那个超平面对应的 $\beta_0 \dots \beta_p$.
+
+图9.4，如何处理无法完全分割的情况：*soft margin*.
+
+# 9.2 Support Vector Classifiers
+
+图9.5：一个观测点可能对超平面产生显著影响，表明 MMC 具有一定的过拟合倾向。
+
+SVC 对 MMC 的修正：
+
+* 尽量不对个别观测点敏感；
+
+* 放弃对全部观测正确分类，只对大多数观测正确分类即可。
+
+通过牺牲少数观测点上的分类正确性，换取最大多数观测点上更好的分类效果。
+
+图9.6：SVC 对 MMC 修正的图示，
+左图：观测点进入到 margin 内；
+右图：观测点进入超平面错误的（不属于自己响应变量）一侧。
+
+SVC 的计算方法：式(9.12) ~ (9.15)，对应着 MMC 的(9.9) ~ (9.11)。
+每个观测通过自己的 $\epsilon_i$ 确定所处区域。
+
+图9.7：对式 (9.15) 中 $C$ 参数含义的说明：
+$C$ 越大，间隙越宽松，容忍更多的观测点进入其内部甚至另一侧，所以间隙很宽；
+随着 $C$ 不断减小，间隙越来越严格，越来越窄。
+
+问题：
+
+* SVC 的 support vector 与 MMC 的 support vector 有什么相同和不同点？ (p347)
+
+* $C$ 不断变大的过程中，variance 和 bias 如何变化？ (p347, 348)
+
+* SVC 只依赖于部分观测点，远离超平面的观测点对超平面没有影响。
+这一特点与哪种分类方法相同，与哪种方法不同？ (p348)
+
+# 9.3 Support Vector Machine
+
+图9.8：非线性边界下使用 SVC 效果很差。
+
+式 (9.16) 对 (9.12) ~ (9.15) 的改进：
+增加了 $p$ 个二次项，高维空间中的线性，映射到低位空间实现了非线性。
+
+对式 (9.18) 的说明：对照 9.1.3 节第3段 $f(x^*)$ 表达式，
+$x$ 是一个长度为 $p$ 的向量（注意内积符号与括号的区别）：
+$$
+f(x^*) = \beta_0 + \sum_{i=1}^n \alpha_i \langle x^*, x_i \rangle \\
+= \beta_0 + \sum_{i=1}^n \alpha_i \sum_{j=1}^p x^*_j x_{ij} \\
+= \beta_0 + (\alpha_1 x^*_1 x_{11} + \dots + \alpha_1 x^*_p x_{1p})
+  + \dots + (\alpha_n x^*_1 x_{n1} + \dots + \alpha_n x^*_p x_{np}) \\
+= \beta_0 + (\alpha_1 x_{11} + \dots + \alpha_n x_{n1})x^*_1
+  + \dots + (\alpha_1 x_{1p} + \dots + \alpha_n x_{np})x^*_p \\
+= \beta_0 + \beta_1 x^*_1 + \dots + \beta_p x^*_p  \\
+\therefore \beta_1 = \alpha_1 x_{11} + \dots + \alpha_n x_{n1}
+  = \sum_{i=1}^n \alpha_i x_{i1} \\ \dots \\
+\beta_p = \alpha_1 x_{1p} + \dots + \alpha_n x_{np}
+  = \sum_{i=1}^n \alpha_i x_{ip} \\
+\therefore \beta_k = \sum_{i=1}^n \alpha_i x_{ik}, \; i \in [1, p]
+$$
+
+inner products 个数的计算：
+$$
+\begin{pmatrix} n \\ 2 \end{pmatrix} = C^2_n = \frac{n!}{2! (n-2)!} = \frac{n(n-1)}2
+$$
+
+问题：$C^2_n$ 个内积是如何参与 $f(x^*)$ 计算的？
+
+SVM名称的由来：
+
+> When the support vector classifier  is combined with a non-linear kernel such as (9.22), the resulting classifier is  known as a support vector machine.
+
+核 (kernel) 是一个函数，在 SVM 场景中是超曲面的一般化，
+例如一次多项式核 (linear kernel) 是前几节里分析的超平面，
+二次多项式核 (polynomial kernel of degree 2) 是二次超曲面等。
+所谓 **超** 平/曲面，就是维度 (dimension) 大于2，无法在三维空间中图形展示的面。
+
+使用一次多项式作为核的 SVM 就是 support vector classifier：
+
+> When $d = 1$, then the SVM reduces to the support vector classifier seen earlier in  this chapter.
+
+式 (9.22)： polynomial kernel of degree $d$，式 (9.23)：SVM 的一般表达式，
+式 (9.24)，极坐标核表达式。
+
+图 (9.9): 左侧为多项式核分类效果，右侧为极坐标核分类效果。
+
+极坐标核的分类结果主要由测试观测附近的观测决定，这就是 *local* 特征。
+
+使用不同核函数与非线性边界，式 (9.16)，相比的优点：
+
+* 节约计算资源；
+
+* 能处理特征数据极大的场景。
+
+
+
+
+
+对本节最后一段的理解：
+式 (9.16) 需要增加特征个数，变为 原始特征数 $p$ 的 $m$ 倍（例如对式 (9.16) $m = 2$），训练集规模会变成 $n \times p \times m$，计算量非常大。采用核函数，在观测数为 $n$ 的训练集上，则只需要计算 $C^2_n$ 次，且仍然具备很高的灵活性，例如可以使用 $d$ 次多项式核，径向核（radial kernel）等。
+
+
+下面这句话的依据是什么？
+> An optimal classifier will hug the top left corner of the ROC plot.

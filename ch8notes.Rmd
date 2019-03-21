@@ -1,5 +1,5 @@
 ---
-title: "第8章笔记"
+title: "ISL 第8章笔记"
 output: html_notebook
 ---
 
