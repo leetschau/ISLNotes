@@ -1,0 +1,100 @@
+---
+title: "ISL 第6章笔记"
+output: html_notebook
+---
+
+# Concepts
+
+* **Model selecton**：定义在P175，这里 *model* 指通过某种假设（例如线性回归、n阶多项式曲线回归、n阶样条曲线回归）拟合得到的模型，也就是 `lm()` 、`glm()` 等函数的返回结果。注意 *n* 不同得到的是不同的模型，例如2阶样条和3阶样条拟合出的是不同的模型。Model selection的目的就是通过某种评价准则（ 拟合度：training RSS、预测能力：test MSE等 ）确定哪个模型最优， 以第5章的cross validation为例，就是计算每个模型的 test MSE，最小的那个模型的预测精度最高，也就是最好的模型。跨模型比较的例子见图8.7（8.1.3节，线性回归 vs 决策树）。
+
+* **Feature selection**：定义在P204，对某个特定的数据集，去掉对结果没有影响（ 或者影响很小 ）的特征，保留对结果影响显著的特征的技术。本章重点介绍了3大类 feature selection 技术。但由于在同一数据集上选择不同的特征可以认为形成了不同的 model，有些文档也用 *model selection* 指 feature selection 技术，例如R文档中对 `regsubsets()` 的描述。
+
+* **Feature engineering**：针对某些原始信息（图片、声音、日志文件等），使用 feature engineering 技术提取出供机器学习使用的数据集。从处理流程上看，先通过 feature engineering 生成数据集，再用 feature selection 去掉不相关的特征，再用 model selection 对比评估各种模型的优劣。
+
+# 6.1 Subset Selection
+
+> In the past, performing cross-validation was computationally prohibitive  for many problems with large $p$ and/or large $n$, and so AIC, BIC, $C_p$,  and adjusted $R^2$ were more attractive approaches for choosing among a  set of models.
+However, nowadays with fast computers, the computations  required to perform cross-validation are hardly ever an issue. Thus, cross- validation is a very attractive approach for selecting from among a number  of models under consideration.
+
+*one-standard-error* rule in last paragraph of section 6.1.3:
+
+1. First calculate the ** standard error** of the estimated test MSE for each model size;
+
+1. Then  select the **smallest model** for which the estimated test error is ** within one  standard error** of the lowest point on the curve.
+
+Let $\mu$ denotes the minimum of * estimated test MSE*, $\sigma$ denotes the * standard error* of $\mu$,  **within one standard error** above means the MSE of this model is in the range of $[\mu - \sigma, \mu + \sigma]$.
+
+**smallest model** means models containing smallest number of predictors.
+
+In linear regression, we use *p-value* (a method of hypothesis test) to find out if a predictor has influence on the response (see section 3.1.2 for details).
+Comparing with *p-value* method, subset selection methods are more direct and intuitive.
+
+# 6.2 Shrinkage Methods
+
+> Why is it that the lasso, unlike ridge regression, results in coefficient  estimates that are exactly equal to zero?
+
+Figure 6.7 以及 P222 第2段，P225 最后一段回答了上述问题：
+
+>  In general, one might expect the lasso  to perform better in a setting where a relatively small number of predictors  have substantial coefficients, and the remaining predictors have coefficients  that are very small or that equal zero. Ridge regression will perform better  when the response is a function of many predictors, all with coefficients of  roughly equal size.
+
+> ... ridge regression more or less shrinks every dimension  of the data by the same proportion, whereas the lasso more or less shrinks  all coefficients toward zero by a similar amount, and sufficiently small co efficients are shrunken all the way to zero.
+
+但 Figure 6.7 也可以理解为 Lasso 尖锐的边界似乎更适合使用 "Ridge" 这个名字。
+
+Explanations of the last sentence of the last paragrash on page 228:
+
+> In contrast, the least squares solution—displayed on the far  right of the right-hand panel of Figure 6.13—assigns a large coefficient  estimate to only one of the two signal variables.
+
+Referencing the last paragraph on page 216, and the right-hand panel of Figure 6.4, when $\frac {\Vert \hat \beta^L_\lambda\Vert_1} {\Vert \hat \beta \Vert_1} \to 1$, we have:
+$$
+\lambda \to 0  \\
+RSS + \lambda \sum^p_{j=1}\vert \beta_j \vert \to RSS  \qquad \text{from equation (6.7)}
+$$
+
+So the far right of the right-hand panel of Figure 6.13 is where the LASSO becoming to Least Square Fit.
+
+See solutions of exercise 6 for the proof of equation (6.14) and (6.15).
+
+# 6.3 Dimension Reduction Methods
+
+PCA 的思想是找到特征数据中变化最大（vary the most）的维度，见图 6.14。
+或者可以理解为：找到与所有数据距离最近（as close as possible）的轴，见图 6.15。
+
+P229 方程 (6.16) 说明了原始预测值 (predictors) 矩阵 $X$ ($n \times p$) 和 做PCA之后的 新矩阵 $Z$ ($n \times m$) 的关系。设 $\Phi$ ($p \times m$) 是从 $X$ 到 $Z$ 的转换矩阵，则有：
+
+$$
+Z = X \cdot \Phi
+$$
+
+式（6.16) 表示 $Z$ 的第 $m$ 列是由 $X$ 矩阵与 $\Phi$ 矩阵的第 $m$ 列相乘，得到一个 $n \times 1$ 的列向量。
+公式 (6.20) 是 $m=1, n=i$ 时 $Z$ 的计算过程，这里
+
+$$
+\Phi_{p1} = \begin{pmatrix} 0.839 \\ 0.544 \end{pmatrix}
+$$
+
+P231 方程(6.19)和(6.20)实际上是坐标轴旋转，解释方程(6.19)中的系数时，作者解释要求 $\phi_{11}^2 + \phi_{21}^2 = 1$ 的理由是“否则可以通过任意增加 $\phi_{11}$ 和 $\phi_{21}$ 的值达到增加方差的目的”：
+
+> otherwise we could increase $\phi_{11}$ and $\phi_{21}$ arbitrarily in order to blow up the variance.
+
+但根据坐标轴旋转的特征（参考 [Rotation of axes](https://en.wikipedia.org/wiki/Rotation_of_axes)）可知 0.839 和 0.544 分别对应旋转公式中的 $\cos \theta$ 和 $\sin \theta$（$\theta$ 是坐标轴旋转的角度），所以二者的平方和一定是1。
+
+Dimension Reduction Methods求解的整体流程：
+
+1. 计算出 $Z_1, \dots, Z_M$：两种方法：PCA和PLS，PCA使用variance最大原则算出 first principal component，然后用 TODO 方法算出 第二个component，重复整个过程M次，PLS的计算方法是 TODO;
+
+1. 用 $ Z_1, \dots, Z_M$ 算出式 (6.17) 中的 $\theta_0, \theta_1, \dots, \theta_M$
+
+6.3.2节第3段关于PLS的计算过程：$X_j$ 应该是 $X$ 矩阵本身，
+
+# 6.4 Considerations in High Dimensions
+
+In Figure 6.24, the y-axis is the test MSE, the x-axis is the degree of freedom.
+
+> In general, adding additional **signal features  that are truly associated with the response** will improve the fitted model,  in the sense of leading to a reduction in test set error. 
+
+> However, adding ** noise features** that are not truly associated with the response will lead  to a deterioration in the fitted model, and consequently an increased test  set error.
+
+> Even if they are relevant, the variance incurred  in fitting their coefficients may outweigh the reduction in bias that they  bring.
+
+在 high dimensional 数据集上，传统的 $R^2$, training MSE 等数值没有说服力，以图 6.23 为例，即便 training MSE = 0，$R^2 = 1$，并不能说明拟合出一个好模型，必须用 cross validation 通过 MSE on test set 来评估模型预测精度。

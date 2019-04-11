@@ -1,0 +1,295 @@
+---
+title: "ISL 第10章笔记"
+output: html_notebook
+---
+
+本章内容概览：
+
+* 无监督学习的特点；
+
+* PCA 方法；
+
+* 几种聚类方法；
+
+监督与无监督学习的区别是什么？
+
+无监督学习：寻找数据中隐藏的关系。
+
+特征间关系：PCA
+
+观测间关系：聚类
+
+# 概念
+
+* **variables**: another name of *feature*, "When faced with a large set of correlated variables, principal components allow us to summarize this set with  a smaller number of representative variables that collectively explain most of the variability in the original set";
+
+* **first principal component**: 即 $Z_1$，由式 (10.1) 定义，是 $X_1, \dots, X_p$ 的线性组合，是一个观测点（$p$ 维向量）在 向量（坐标轴）$\phi_1$ 的投影后的坐标值，这样的观测点一共有 $n$ 个，所以 $Z_1$ 是一个长度为 $n$ 的向量：$z_{11}, \dots, z_{n1}$，且 $\sum_{i=1}^n z_{i1} ^ 2 = 1$；
+
+* **loading**: "We refer to the elements $\phi_{11}, \dots, \phi_{p1}$ as the *loadings* of the first principal component". $\phi$ 脚标的第一位数字表示 feature 的序号，从 1 到 $p$，第二位表示这一组 loading 在 PC 中的序号，例如  $\phi_1$ 的脚标第二位都是1，$\phi_2$ 脚标第二位都是2等等。$\phi_{ij}$ 表示第 $j$ 个 principal component loading vector 中，第 $i$ 维与原始第 $i$ 维坐标轴夹角的余弦值。实例见表10.1：USArrests PC1 和 PC2 各自的 loading vectors;
+
+* **loading vector**: $\phi_1$ 是一个长度为 $p$ 的向量：$\phi_{11}, \dots, \phi_{p1}$，定义了一条坐标轴，观测数据在这个轴上 variance 最大，或者说数据到这个轴的距离和最小，$n$ 个观测 $x_1, \dots, x_n$ 映射到这个轴上的值就是 $z_{11}, \dots, z_{n1}$，即 first principal component $Z_1$ 的 *scores*;
+
+* **score**: $z_{11}, \dots, z_{n1}$ 是 first PC $Z_1$ 的 *scores*;
+
+* **biplot**: 左、下坐标轴绘制各个观测点的 $Z_2, \, Z_1$ 值，右、上坐标轴绘制 loading vector $\phi_2, \, \phi_1$，示例见图 10.1；
+
+* **proportion of variance explained (PVE)**: 用于度量一个 principal component 解释了多大百分比的 variance；
+
+* **scree plot**: 橫轴为 PC 序号，纵轴为此 PC 对应的 PVE；
+
+* **dendrogram**: 采用 bottom-up 方式的层次聚类（hierarchical clustering）时，生成的一颗倒置的树，每个叶子节点代表一个 observation，从不同的高度 cut，就可以分成不同数量的类，见图 10.9。
+
+# 10.1 无监督学习的特点
+
+* 主观性更强：监督学习会产生确定的分类（回归）结果（例如逻辑回归、树方法、SVM等）和确定的质量评估（使用交叉验证、测试准确率等方法）；
+  无监督学习不存在这些确定的结果和指标；
+
+* 主要用于 exploratory data analysis，寻找关系；
+
+常用场景：
+
+* 癌症筛查：病人分类 (by observations)、基因分类 (by features)；
+
+* 商品推荐：用户画像， by observations or features?
+
+* 搜索引擎结果推荐：*python* (data science, movie, biology, ...)，如何确定各分类权重？
+
+# 10.2 PCA 方法
+
+第6章 降维方法 PCR：
+找到特征空间中变化幅度最大的轴（图6.14），或者离所有数据点最近的轴（图6.15）。
+
+## 10.2.1 什么是 Principal Components?
+
+继续使用二维图像方法寻找 PC 是否可行？为什么？
+
+求解过程：
+
+1. 通过特征值分解求解式 (10.3)，得到 loading vector $\phi_1, \, \phi_2, \, \dots$;
+
+1. 根据式 (10.2) 计算出 scores $Z_1, \, Z_2, \dots$。
+
+式 (10.1)：数据集 $X$ 在坐标系 (loading) 下的映射 $Z$，$X_p$ 表示第 $p$ 个 feature 向量，也就是 $n \times p$ 训练集的第 $p$ 列；$Z_1$ 就是 first principal component，
+式 (10.2) 中的 $z_{i1}$ 表示 $Z_1$ 的第 $i$ 个分量，也就是 $Z_1$ 在第 $i$ 个观测（行）上的计算结果。
+实例见式 (6.19)，(6.20) 和 图 (6.15)。
+
+Sample variance 是 standard deviation 的平方，计算公式（参考 [Sample Variance: Simple Definition](http://www.statisticshowto.com/sample-variance/)）：
+$$ s^2 = \frac{\sum (X - \bar X) ^ 2}{N - 1} $$
+
+$\phi_1, \phi_2, \dots$ 是 $p$ 维空间中的一组正交向量，例如在3个 feature 的数据集上，$\phi_1$ 确定后，在与其正交的向量（无数个）集合中求出 $\phi_2$，再根据式 (10.1) 计算出 $Z_1, Z_2$，它们绘制的二维图实际上是原始数据集（三维空间）在 $\phi_1, \phi_2$ 确定的平面上的投影。
+
+问题：
+
+* 如何确保 $X$ 每个特征（每一列）的平均值是0？
+
+* $\phi_1 = (0.839, 0.544)$ 如何确定坐标轴方向？
+
+### biplot 解读
+
+图 10.1（右、上坐标轴 (loading vector) 在表 10.1 中定义）：
+
+对特征的解读：第一主成分主要由 Assault, Murder 和 Rape 组成，三者比例接近，
+说明三者有较高的相关性，第二主成分主要由 UrbanPop 组成；
+
+对观测点的解读：第一主成分高的州（图右侧）犯罪率高，左侧犯罪率低，
+California 的犯罪率和城市人口都高，靠近中心位置，即两个主成分都低的州，
+犯罪率和城市人口都趋向于平均值。
+
+## 10.2.2 主成分的另一种解释
+
+与 maximize variance 相对的，是低维线性平面解释，
+即主成分构成了与所有观测点最近的低维线性平面。
+
+图 10.2 是包含2个主成分组成的平面在三维空间中的图示。
+
+## 10.2.3 More on PCA
+
+执行 PCA 前要把所有 feature 的 standard deviation 变为1，否则会影响结论，见图 10.3 中的对比：
+右图显示的是没有做 unit standard deviation，Assault 被错误地放大了。
+
+> Because it is undesirable for the principal components obtained to depend on an arbitrary choice of scaling,
+> we typically scale each variable to have standard deviation one before we perform PCA.
+
+但是，当各个 feature 的单位一样时，一般不做上述归一化：
+
+> In certain settings, however, the variables may be measured in the same units.
+> In this case, we might not wish to scale the variables to have standard deviation one before performing PCA.
+
+一个 $n \times p$ 数据集的 PC 数量是 $min(n-1, p)$:
+
+> In general, a $n \times p$ data matrix $X$ has $min(n − 1, p)$ distinct principal components.
+
+关于用多少 PC 合适，一般是找 scree plot 上的拐点（elbow），但有时这个点并不明显，
+所以到底选前几个PC 并没有一个固定的标准，
+这也是无监督学习（以及数据探索）比监督学习主观性更强的一个证明。
+
+# 10.3 聚类方法
+
+K-Means 是无监督学习中的聚类（clustering）方法，
+其中的 $K$ 表示要分成 $K$ 个聚类；
+
+KNN 是监督学习中的分类（也可以做回归）方法，
+其中的 $K$ 表示一个待预测点的响应值由离它最近的 $K$ 个邻居决定，
+KNN 方法直接用标记好的数据计算未标记数据，所以没有训练阶段。
+
+聚类方法 与 PCA 的区别：
+
+* PCA 寻找区分度最大的几个维度，然后在它们构建出的低维空间里展示观测点的区别；
+
+* 聚类方法划分出的类别与原始观测具有相同的维数。
+
+K-Means 与层级聚类的区别： 前者需要预先确定分组个数，后者给出所有分组情况，
+由开发者/用户确定分组数量。
+
+聚类有两种方式：基于特征，将观测分为不同的组；或者基于观测，将特征分为不同的组，
+本书只讨论对观测的分组（聚类）。
+对特征的分组可以通过先将数据集转置，再对观测分类来实现。
+
+## 10.3.1 K-Means 聚类
+
+K-Means 实现思路：
+
+1. 直观想法：将（尽量）相似的观测划分到同一组中；
+
+1. 数学语言：找到一种充分无重叠（定义见 p386 倒数第2段）的分组 $C_1, \, \dots, \, C_K$，
+   使得各组内分散程度（within-cluster variation）之和最小（式 (10.9)）；
+
+1. 转化为可解问题：
+
+    a. 用欧氏距离取代 $W(C_k)$，式 (10.10), (10.11)；
+    
+    a. Precision-cost trade-off: 用局部最优代替全局最优；
+    
+    a. 用 Algorithm 10.1 求解式 (10.11)：图 (10.6)；
+
+1. 对 trade-off 做补充和完善（图 10.7）；
+
+Algorithm 10.1 计算流程：
+
+1. 将每个观测点随机分配到一个组；
+
+1. 重复下面的步骤，直到每个观测所属的组不再变化：
+
+    a. 计算每个分组的质心（centroid），每个质心是一个长度为 $p$ 的向量，得到 $K$ 个质心；
+
+    a. 对于每一个观测，比较它与上述 $K$ 个质心的距离，
+       将它标记为最近的质心所在的组。 
+
+*K-Means* 这个名字的由来是在上述 2(a) 步骤中，每个质心通过计算组内观测点的平均值得到。
+上述步骤中，第1步的随机分配会影响最终的分类结果，所以要多做几次计算，取其中式 (10.11) 最小的作为最终结果。
+
+问题：
+
+怎样保证计算流程第2步最终会收敛（在有限的步骤内结束）？
+
+这个问题等价于：怎样保证每次迭代后 $W(C_k)$ 单调减小。
+<!-- 步骤 2(b) 中选择最近的质心， 相当于降低了式 (10.12) 右侧的值。 -->
+
+图10.7：不同初始质心对聚类结果的影响。
+
+## 10.3.2 层级聚类
+
+层次聚类相对于 K-Means 的优势：能够提供分类数从1到$n$的所有分类结果，
+并以图形方式展示出来，即 dendrogram.
+
+本节使用自底向上方法构建聚类，
+
+### 解释 dendrogram
+
+dendrogram 的每个叶子是一个观测，从底向上，叶子融合为分支，分支继续融合为更大的分支。
+融合发生得最早，发生融合的节点的越低，彼此相似度越高。
+通过这种方法，可以用融合点的高度表征任何两个观测的相似程度。
+
+图 10.10：对 dendrogram 相似度的一种常见误解
+
+左图：观测 2 和 9 水平距离很近，常被误认为相似度高（实际距离见右图），
+但由于 dendrogram 中树的左右子树可以互换位置，
+如果将子树 2 和 (5, 7, 8) 互换位置，观测 2 和 9 距离就会显著增加。
+这个变化提示我们：dendrogram 中水平距离与相似度没有任何意义，
+只有垂直距离才能表征相似度。
+
+图10.9：如何通过在不同高度上水平切割，从 dendrogram 中划分出不同数量的分组。
+
+层次聚类提供多种分割方案的特点，有利于数据探索工程师从数据中发现更多的信息。
+但硬币的另一面是：
+
+在某些数据集中，层次聚类的效果比 K-Means 差。
+例如一个数据集包含3个国家的男人和女人，当 $K=2$ 时最佳分组策略是按性别划分，
+当 $K=3$ 时最佳分组策略是按国籍划分，
+由于分组的特征发生了变化，$K=2$ 和 $K=3$ 之间不存在层次继承关系，
+无法体现在同一张 dendrogram 上，这种情况下层次聚类的效果不如 K-Means 效果好。
+
+### 层级聚类算法
+
+1. 初始状态：每个观测作为一个分组，共 $n$ 个分组，计算出任意两个分组（共 $C_n^2$ 个）间的欧氏距离值；
+
+1. 令 $i = n, n - 1, .. , 2$ 分别计算：
+
+    i. 找到 $i$ 个分组间的最小距离值，合并这两个分组；
+       合并点的高度就是两个分组间的距离；
+
+    i. 计算剩余的 $n - 1$ 个分组间的距离。
+
+问题：如何计算分组间的距离？
+
+*Linkage* 指如何计算两个 cluster 之间的距离：
+
+* Complete: 两个聚类间两两观测点距离的最大值；
+
+* Single: 两个聚类间两两观测点 距离 的最小值；
+
+* Average:  两个聚类间两两观测点 距离 的平均值；
+
+* Centroid: 两个聚类的质心之间的距离；
+
+基于 Average 和 Complete 方法生成的 dendrogram 一般比 基于 Single 方法生成的 dendrogram 更平衡，见图 10.12。基于 centroid 生成的 dendrogram 会产生倒置 (inversion) 现象，极大降低了模型的解释性，目前只在基因组研究中应用较多。
+
+产生倒置现象的原因是，基于 centroid 的计算方法不能保证距离随着分组数量的减少单调升高，
+即大组间的距离一定大于合并前小组间的距离，违背了聚类分析的一个基本假设：
+小组比大组更集中。
+
+反映在 dendrogram 上，表现为树枝出现了交叉，示例见 Google Image "hierarchical clustering centroid inversion" 中，INF4820, Algorithms for AI and NLP: Hierarchical Clustering by Erik Velldal, p9。
+
+### 距离度量标准的选择
+
+欧氏距离只是分组间差别的度量方法中的一种，还可以用相关性等作为度量标准。
+
+图10.13中，绿线和橙线形状相同，所以相关度很高 (highly corrlated)，但由于值差距较大，所以欧氏距离比较大，红线和橙线正好相反，值接近导致欧氏距离小，但形状不同导致相关度低。
+
+在线购物数据分析的目标是识别出购买习惯相似的顾客，从而为其推荐符合其喜好的商品。
+如果输入以顾客为观测（每行一个对应顾客），以商品为特征，例如“手机”是一列，“衣服”是令一列，
+DataFrame 的每个值表示某顾客购买某商品的数量。
+应该以欧氏距离还是相关系数作为距离标准？
+<!-- 前者导致分类主要以购买数量为依据，后者则会把购买习惯类似的顾客分为一组。 -->
+
+某些商品的购买频率远高于另一些商品，造成前者的影响远大于后者，如何消除这类影响？
+<!-- 对所有特征做标准化，使其标准差为1。 -->
+
+图 10.14：不同顾客（以不同颜色显示）购买袜子和计算机的比较：
+
+* 左图：Y轴代表商品数量，袜子的影响远大于计算机；
+
+* 中图：标准化后的袜子和计算机购买数量，计算机的影响大大增加了。
+
+* 右图：Y轴代表购买金额，袜子的影响可以忽略不计。
+
+## 10.3.3 聚类算法应注意的问题
+
+不论 K-Means 还是层次聚类，都有一些预处理环节的选项需要确定
+（例如是否需要预先标准化方差、K-Means 的 $K$ 值取多少，层次聚类如何确定 dissimilarity 准则、选择哪种 linkage 方式、从哪个位置 cut dendrogram 等），这些选择会对最终结果产生显著影响，但如何确定采用哪个选项没有确定的原则，只能多尝试几种选项，看有没有稳定的结论。
+
+如何评价分类的效果？怎么知道分类是有意义的，而不只是对噪声分类 (clustering the noise)，有些这方面的文献可供参考。
+
+聚类方法对特殊数据 (outlier) 的处理效果不好，数据发生扰动时也不够稳定，例如从原始数据里随机去掉一小部分数据，分类会发生显著差异，这显然不合理。解决方法是取原始数据集的不同部分多做几组聚类，看能否出现稳定的聚类模式。
+
+由于聚类存在以上特点，聚类的结果一般不应作为确定性结论，而只是作为分析的起点，为后续的分析提供参考。
+
+# 聚类相关笔记
+
+*轮廓系数* (silhouette of clustering) 是一个观测点属于自己所在 cluster 质量的衡量指标，越接近 1 表示分类质量越好，越接近 -1 表示越不应被划分到当前聚类，接近 0 表示处在两个 cluster 的边界上。
+
+一个聚类内所有点轮廓系数的平均值越接近 1 越好。
+
+在 R 中，`cluster.stats()` 函数返回值中的 `avg.silwidth` 表示这个 cluster 的轮廓系数的平均值。
+
+参考：[Silhouette (clustering)](https://en.wikipedia.org/wiki/Silhouette_(clustering))
