@@ -104,7 +104,8 @@ California 的犯罪率和城市人口都高，靠近中心位置，即两个主
 
 ## 10.2.3 More on PCA
 
-执行 PCA 前要把所有 feature 的 standard deviation 变为1，否则会影响结论，见图 10.3 中的对比：
+执行 PCA 前要把所有 feature 的 standard deviation 变为1，否则会影响结论，
+见图 10.3 中的对比：
 右图显示的是没有做 unit standard deviation，Assault 被错误地放大了。
 
 > Because it is undesirable for the principal components obtained to depend on an arbitrary choice of scaling,
@@ -120,7 +121,7 @@ California 的犯罪率和城市人口都高，靠近中心位置，即两个主
 > In general, a $n \times p$ data matrix $X$ has $min(n − 1, p)$ distinct principal components.
 
 关于用多少 PC 合适，一般是找 scree plot 上的拐点（elbow），但有时这个点并不明显，
-所以到底选前几个PC 并没有一个固定的标准，
+所以到底选前几个PC 并没有一个固定的标准，见图 10.4.
 这也是无监督学习（以及数据探索）比监督学习主观性更强的一个证明。
 
 # 10.3 聚类方法
@@ -248,7 +249,11 @@ dendrogram 的每个叶子是一个观测，从底向上，叶子融合为分支
 即大组间的距离一定大于合并前小组间的距离，违背了聚类分析的一个基本假设：
 小组比大组更集中。
 
-反映在 dendrogram 上，表现为树枝出现了交叉，示例见 Google Image "hierarchical clustering centroid inversion" 中，INF4820, Algorithms for AI and NLP: Hierarchical Clustering by Erik Velldal, p9。
+反映在 dendrogram 上，表现为树枝出现了交叉，示例见：
+
+![Centroid clustering of Stanford lecture](https://nlp.stanford.edu/IR-book/html/htmledition/img1627.png)
+
+以及 Google Image "hierarchical clustering centroid inversion" 中，INF4820, Algorithms for AI and NLP: Hierarchical Clustering by Erik Velldal, p9。
 
 ### 距离度量标准的选择
 
@@ -275,8 +280,20 @@ DataFrame 的每个值表示某顾客购买某商品的数量。
 
 ## 10.3.3 聚类算法应注意的问题
 
-不论 K-Means 还是层次聚类，都有一些预处理环节的选项需要确定
-（例如是否需要预先标准化方差、K-Means 的 $K$ 值取多少，层次聚类如何确定 dissimilarity 准则、选择哪种 linkage 方式、从哪个位置 cut dendrogram 等），这些选择会对最终结果产生显著影响，但如何确定采用哪个选项没有确定的原则，只能多尝试几种选项，看有没有稳定的结论。
+* 需要预先对特征做标准化？
+
+* 对于层次聚类：
+
+    * 使用哪种距离度量标准？
+    
+    * 使用哪种 linkage？
+    
+    * 从哪一层切 dendrogram？
+
+* 对于 K-Means 方法：K 应该取多少？
+
+这些选择会对最终结果产生显著影响，但如何确定采用哪个选项没有确定的原则，
+只能多尝试几种选项，看有没有稳定的结论。
 
 如何评价分类的效果？怎么知道分类是有意义的，而不只是对噪声分类 (clustering the noise)，有些这方面的文献可供参考。
 
@@ -284,7 +301,7 @@ DataFrame 的每个值表示某顾客购买某商品的数量。
 
 由于聚类存在以上特点，聚类的结果一般不应作为确定性结论，而只是作为分析的起点，为后续的分析提供参考。
 
-# 聚类相关笔记
+# 聚类的质量评价指标
 
 *轮廓系数* (silhouette of clustering) 是一个观测点属于自己所在 cluster 质量的衡量指标，越接近 1 表示分类质量越好，越接近 -1 表示越不应被划分到当前聚类，接近 0 表示处在两个 cluster 的边界上。
 
