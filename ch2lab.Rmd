@@ -1,0 +1,65 @@
+---
+title: "Lab of Chapter 2"
+output: html_notebook
+---
+
+# World of programming languages
+
+Evolution of PLs: Assembly -> C -> C++ -> Java -> Haskell
+
+PL with different characters:
+
+* Static/dynamic: type checked before/at run-time. Java vs Python/R
+
+* Strong/weak: disallow/allow implicit type coersion. Python vs JavaScript
+
+* Paradigm: procedural/OOP/functional.
+    - C: procedure
+    - Java: class, method
+    - Haskell: type, function
+
+Multi-paradigm PLs:
+
+* Python: procedural, OOP, functional
+
+* Scala: OOP, functional
+
+Questions:
+
+Give an example languge of
+
+* Static + strong
+* Static + weak
+* Dynamic + strong
+* Dynamic + weak
+
+Paradigm of R: dynamic, functional
+
+# Baby Steps in R
+
+Text editor and console in R Studio:
+```{r}
+x <- c(1,3,2,5)
+x
+length(x)
+class(x)
+y <- 2 * x
+x + y
+ls()
+rm(y)
+```
+
+Build matrix with `matrix` and get help with `?`:
+```{r}
+?matrix
+m <- matrix(c(1,2,3,4), 2, 2)
+matrix(c(1,2,3,4) ,2,2,byrow=TRUE)
+```
+
+Manipulate the matrix:
+```{r}
+sqrt(m)
+m ^ 2
+```
+
+
