@@ -1,0 +1,29 @@
+---
+title: "ISL 第4章笔记"
+output: html_notebook
+---
+
+# 4.1 An Overview of Classification
+
+The relationship between classification and regression:
+
+> ... the methods used for classification first predict the **probability** of each of
+> the categories of a qualitative variable, as the basis for making the classi fication.
+> In this sense they also behave **like regression methods**.
+
+What is a Credit Card Balance"?
+
+> Your credit card balance is the amount of money you owe to your credit card company on your account.
+> It could be a positive number if you owe money,
+> a negative number if you’ve paid more than you owe or zero if you’ve paid off the balance in full.
+
+See [What is a Credit Card Balance?](https://www.discover.com/credit-cards/resources/what-is-a-credit-card-balance) and [Credit Card Balance](https://www.investopedia.com/terms/c/credit-card-balance.asp) for detailed explanations.
+
+```{r}
+knitr::kable(mtcars[1:6, 1:6], caption = 'A subset of mtcars.')
+```
+
+| | Second Header |
+| ------------- | ------------- |
+| **Content Cell**  | Content Cell  |
+| *Content Cell*  | Content Cell  |

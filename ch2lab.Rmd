@@ -3,7 +3,95 @@ title: "Lab of Chapter 2"
 output: html_notebook
 ---
 
-# World of programming languages
+# 了解数据分析工作环境
+
+首先认识一下 RStudio 的各个组成部分。
+
+## 控制台
+
+*Console* 窗口是数据探索最重要的工具，也是数据分析师最强有力的工具:
+```{r}
+library(tidyverse)
+library(ggplot2)
+obs <- head(mpg)
+```
+
+## 命令历史
+
+*History* 窗口记录了命令历史，并提供了查找、删除、保存、加载等功能，常用快捷键：
+
+* Shift + Enter: 插入命令到 editor;
+
+* Enter: 插入命令到 console;
+
+## 绘图
+
+*Plots* 窗口用于展示数据图，与 *Console* 配合构成了数据探索的主要工具：
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, color = drv))
+```
+
+## 变量列表和数据对象窗口
+
+变量列表 (Environment) 窗口列出了当前环境中变量的名称、类型等信息，
+通过 `View` 函数可以将这些变量在数据窗口中打开。
+
+在数据窗口中，可以浏览变量值，并执行常用的排序、筛选、文字搜索等操作：
+
+```{r}
+View(obs, title = "Head of mpg")
+```
+
+## 帮助文档
+
+RStudio 的帮助文档 (Help) 窗口包含了对包、函数完整的功能、参数说明，实例展示等。
+```{r}
+?head
+```
+
+## 编辑器
+
+文本编辑器 (Editor) 可以编辑多种文档，完成不同的任务，
+例如脚本编写、展示文档编辑等，它生成的是 RMarkdown 纯文本文件，
+是目前数据分析领域最好的文档格式（之一）。
+
+*Shiny* 则是快速数据应用开发的利器。
+
+快捷键：Ctrl-Enter, Ctrl-Shift-Enter, Ctrl-Alt-R;
+
+Editor 与 Console 的互动构筑了程序开发（包括数据分析）的基石，
+所以有了自己的名字： *REPL*
+
+## 文档预览
+
+*Preview* 工具帮助开发者在编辑 RMarkdown, Shiny 脚本时实时预览，快捷键：Ctrl-Shift-K。
+
+可以生成的文档类型包括：Html, PDF, Word 等。
+
+## 配置
+
+[Tools > Global Opitons]
+
+* 编辑器配色
+
+* 编辑器模式
+
+* 常用快捷键
+
+## 其他窗口和快捷键
+
+* 项目管理
+
+* 版本控制
+
+* 文件浏览：设置、跳转到工作目录
+
+* 窗口跳转快捷键
+
+* 窗口大小缩放
+
+# World of Programming Languages
 
 Evolution of PLs: Assembly -> C -> C++ -> Java -> Haskell
 
@@ -35,9 +123,9 @@ Give an example languge of
 
 Paradigm of R: dynamic, functional
 
-# Baby Steps in R
+# 初识 R 语言
 
-Text editor and console in R Studio:
+简单的变量和运算：
 ```{r}
 x <- c(1,3,2,5)
 x
@@ -49,17 +137,64 @@ ls()
 rm(y)
 ```
 
-Build matrix with `matrix` and get help with `?`:
+创建矩阵对象：
 ```{r}
 ?matrix
-m <- matrix(c(1,2,3,4), 2, 2)
-matrix(c(1,2,3,4) ,2,2,byrow=TRUE)
+m <- matrix(c(1,2,3,4,5,6), 2, 3)
+n <- matrix(c(1:20) ,5, 4, byrow=TRUE)
 ```
 
-Manipulate the matrix:
+矩阵基本运算和下标取值：
 ```{r}
+dim(m)
 sqrt(m)
 m ^ 2
+n
+n[2,2]
+n[2,]
+n[c(1,3), c(2,4)]
+n[-c(1,3), -c(2,4)]
 ```
 
+从 CSV 文件中加载数据：
+```{r}
+inp <- read.table('data/College.csv', header = TRUE, sep = ',', quote = '')
+```
+
+Dataframe 基本运算：
+```{r}
+head(inp)
+tail(inp)
+sample_n(inp, 10)
+colleges <- inp[,c('Private', 'Apps', 'Enroll')]
+sample_n(colleges, 5)
+sample_n(inp[,c('Private', 'Apps', 'Enroll')], 5)
+```
+
+从 OOP 到 FP：
+```{r}
+res <- inp %>%
+  select(Private, Apps, Enroll) %>%
+  sample_n(5)
+```
+
+获取数据类型：
+```{r}
+class(c(2, 3, 4))
+class(c(2.1, '3', 4))
+class(m)
+class(res)
+```
+
+## 生成随机数
+
+```{r}
+set.seed(3)
+y <- rnorm(100)
+mean(y)
+var(y)
+sqrt(y)
+median(y)
+sd(y)
+```
 
