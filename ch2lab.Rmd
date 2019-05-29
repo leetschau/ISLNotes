@@ -186,6 +186,12 @@ class(m)
 class(res)
 ```
 
+汇总数据：
+```{r}
+summary(mpg)
+summary(mpg$cty)
+```
+
 ## 生成随机数
 
 ```{r}
