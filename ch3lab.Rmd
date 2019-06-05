@@ -5,6 +5,7 @@ output: html_notebook
 
 # 3.6.2 Simple Linear Regression
 ```{r}
+library(MASS)
 names(Boston)
 head(Boston)
 ?Boston
@@ -67,6 +68,7 @@ which.max(hatvalues(lm.fit))
 So the 375th observatin has the largest leverage statistics.
 
 # 3.6.3 Multiple Linear Regression
+
 Regression *medv* on *lstat* and *age*:
 ```{r}
 lm.fit <- lm(medv ~ lstat + age, data = Boston)
@@ -78,12 +80,20 @@ Short-hand expression `.` for *all other variables* as predictors:
 all.fit <- lm(medv ~ ., data = Boston)
 summary(all.fit)
 ```
+
 Test *colinearity* of the predictors with *VIF* (explained in *6. Colinearity* in section 3.3.3):
 ```{r}
 library(car)
 vif(all.fit)
 ```
 So the *rad* and *tax* has a high possibility of colinearity. See bottom of p101:
+
+Note: on Ubuntu 18.04, you have to run the following lines as root to install `car` package:
+```
+apt install libgfortran3 r-cran-car
+```
+
+After this you can run `library(car)` directly without running `install.packages('car')`.
 
 > As a rule of thumb, a VIF value that exceeds 5 or 10 indicates a problematic amount of collinearity.
 
@@ -140,7 +150,9 @@ summary(fit.ls.5)
 ```
 
 # 3.6.6 Qualitative Predictors
+
 ```{r}
+library(ISLR)
 data("Carseats")
 names(Carseats)
 fit.carseats <- lm(Sales ~ . + Income:Advertising + Price:Age, data = Carseats)
