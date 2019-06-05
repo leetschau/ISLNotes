@@ -468,6 +468,12 @@ Version: 1.4.3
 Hash: f50582f9059ab381cd38dd02697d8a88
 Requires: Rcpp, plyr, stringr
 
+Package: reticulate
+Source: CRAN
+Version: 1.12
+Hash: df694e0e90ae0dd9727adfc1829a7421
+Requires: Rcpp, jsonlite
+
 Package: rlang
 Source: CRAN
 Version: 0.2.1
