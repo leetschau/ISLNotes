@@ -2,16 +2,23 @@
 title: "Conceptual Exercises of Chapter 3"
 output: html_notebook
 ---
+
 # Question 1
-The null hypotheses of Table 3.4 is: the advertising costs of TV, radio and newspaper have no significant influnce of sales.
+
+The null hypotheses of Table 3.4 is: the advertising costs of TV, radio and newspaper have no significant influence of sales.
+
+The p-values show that TV and radio have significant influence on sales, while newspaper does not.
 
 # Question 2
+
 For KNN classifier, the response variable is qualitative, while for KNN regression method, the response variable is quantitative, the formula is described in p105:
 $$ \hat f(x_0) = \frac 1 K \sum_{x_i\in \mathcal N_0} y_i$$
 where $\mathcal N_0$ is the set of the K nearest points of $x_0$.
 
 # Question 3
+
 ## 3a
+
 The answer *iii* is right. Take $\beta_i$ into the regression equation, we get:
 $$
 \because \text{$x_1$ and $x_2$ is constant} \\
@@ -46,6 +53,7 @@ The same reason with (a).
 There's not enough information to tell. It depends on how non-linear between $X$ and $Y$.
 
 # Question 5
+
 Let $$ \sum_{j=1}^n x_j^2 = C$$
 So we have $$
 \begin{align}
@@ -58,6 +66,7 @@ $$
 Here $k = i'$, and $a_k$ is the function of $i$, which means $a_k$ changes according to $i$.
 
 # Question 6
+
 Given equation (3.2) and (3.4), we know the linear regression line equation is $y = \bar y - \hat \beta_1 \bar x + \hat \beta_1 x$.
 So when $x = \bar x$, $y = \bar y$, which means point $(\bar x, \bar y)$ is on he line.
 
