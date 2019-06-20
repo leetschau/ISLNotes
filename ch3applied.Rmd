@@ -284,7 +284,7 @@ So $\beta_0 = -1$ vs. $\hat\beta_0 = -1.009$, $\beta_1 = 0.5$ vs $\hat\beta_1 = 
 ## 13f
 ```{r}
 plot(x, y)
-abline(f13d, col = 'red', lty = 4)
+abline(coef(f13e), col = 'red', lty = 4)
 abline(-1, 0.5, col = 'blue', lty = 2)
 legend('bottomright', c('population regression', 'least square'), lty = c(4,2), col = c('red', 'blue'), bty = 'n')
 ```
@@ -520,7 +520,7 @@ sim.coef <- c(coef(f15a1)[2], coef(f15a2)[2], coef(f15a3)[2], coef(f15a4)[2], co
 mul.coef <- coef(f15b)[-1]
 plot(sim.coef, mul.coef)
 ```
-The predictor *nox* has positive influence no *crim* in simple linear regression and negative influence in multiple linear regression. The former says when calculating the average value of  crime rates according to nitrogen oxides, the *crim* increate as the *nox* increase. The latter says when other predictors fixed, the crime rates decrease as the nitrogen oxides increase.
+The predictor *nox* has positive influence on *crim* in simple linear regression and negative influence in multiple linear regression. The former says when calculating the average value of crime rates according to nitrogen oxides, the *crim* increate as the *nox* increase. The latter says when other predictors fixed, the crime rates decrease as the nitrogen oxides increase.
 Section 4.3.4 on page 135 provides detailed explanations about a similar problem:
 > In general, the phenomenon seen in Figure 4.3 is known as **confounding**.
 
