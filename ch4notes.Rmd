@@ -23,7 +23,45 @@ See [What is a Credit Card Balance?](https://www.discover.com/credit-cards/resou
 knitr::kable(mtcars[1:6, 1:6], caption = 'A subset of mtcars.')
 ```
 
-| | Second Header |
-| ------------- | ------------- |
-| **Content Cell**  | Content Cell  |
-| *Content Cell*  | Content Cell  |
+# 4.4 Linear Discriminant Analysis
+
+LDA 预测响应变量 $Y$ 所属分类的原理：
+假设响应变量 $Y$ 有 $1..K$ 共 $K$ 个可选类别，且特征在每个类别内服从（多变量）正态分布（4.4.3节第1、2段），则基于已有的 $Pr(X=x|Y=k_i),\; i \in [1..K]$，利用 Bayes 定理反推已知 $X = x$ 情况下 $Y = k_i,\; i \in [1..K]$ 的概率，见式 (4.10)，分类预测结果就是概率最大的那个分类 $k$。
+
+适用场景：
+
+> ... linear discriminant analysis is popular when we have more than two response classes.
+
+For equation (4.10), see detailed explanations of Bayer's Formula, equation (1.9) on page 13 of "Introduction to Probability Theory" 11th edition by Sheldon M. Ross (IPT).
+Here $f_k(x)$ corresponds to $P(E\vert F_j)$, $\pi_k$ corresponds to $P(F_j)$.
+
+For equation (4.11), see section 2.3.4 of IPT.
+
+See exercise 2 for the proof of why the maximum of equation (4.13) is the maximum of equation (4.12). Notice for equation (4.12), the $p_k(x)$ is the function of $k$, not $x$.
+
+Explanation of equation (4.14):
+
+The Bayes decision boundary is  $\delta_1(x) = \delta_2(x)$.
+Take equation (4.13) into it:
+$$
+\frac{2x\mu_1 - \mu_1^2}{2\sigma^2} =  \frac{2x\mu_2 - \mu_2^2}{2\sigma^2} \\
+2x(\mu_1 - \mu_2) = \mu_1^2 - \mu_2^2  \\
+x = \frac{\mu_1 + \mu_2}2
+$$
+
+LDA 中线性名称来自于式(4.17)：
+
+> The word *linear* in the classifier’s name stems from the fact  that the *discriminant functions* $\hat \delta_k(x)$ in (4.17) are linear functions of $x$ (as opposed to a more complex function of *x*).
+
+For section 4.4.2, "varying the classifier threshold changes its true positive and false positive rate", but how to change the classifier threshold in the equation (4.19)?
+
+## 4.4.4 Quadratic Discriminant Analysis
+
+QDA 不再要求响应变量的任意两组间协方差相同，表现在图4.9中，Bayes 边界从直线变成了曲线，
+因此比 LDA 具有更大的灵活性。
+
+> LDA is a much **less flexible** classifier than QDA, and so has substantially **lower variance**.
+This can potentially lead to **improved  prediction performance**.
+But there is a trade-off: if LDA’s assumption that  the K classes share a common covariance matrix is badly off, then LDA  can suffer from high bias.
+Roughly speaking, LDA tends to be a better bet  than QDA if there are relatively few training observations and so reducing  variance is crucial.
+In contrast, QDA is recommended if the training set is  very large, so that the variance of the classifier is not a major concern, or if  the assumption of a common covariance matrix for the K classes is clearly  untenable.

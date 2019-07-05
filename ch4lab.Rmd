@@ -11,8 +11,35 @@ cor(Smarket[,-9])
 plot(Smarket$Volume)
 ```
 
+从相关系数矩阵可以看出：
+
+* *Today* 与其他变量都关系不大；
+
+* *Volume* 和 *Year* 有一定的正相关关系（0.54）。
+
+## var, sd, cov, cor
+
+Variance（方差）表征一个随机变量（表现形式为向量）的分散程度，对应 R 函数 `var(X)`，定义：
+$$
+\sigma^2_X = \frac{\sum (x - \mu)^2}{N}
+$$
+
+Standard deviation（标准差），对应 R 函数 `sd(X)`，是 $Var(X)$ 的平方根；
+
+Covariance（协方差）对应 R 函数 `cov(X, Y)`，表征两个随机变量是否有相同/相反的变化趋势：
+$$
+\sigma_{X, Y} = \frac{\sum(x - \bar x)(y - \bar y)}{n - 1}
+$$
+
+Correlation（相关系数）是 协方差的标准化版本，对应 R 函数 `cor(X, Y)`：
+$$
+\rho_{XY} = \frac{\sigma_{XY}}{\sigma_X \sigma_Y} \in [-1, 1]
+$$
+
 # 4.6.2 Logistic Regression
 
+`glm()` 在基本的线性回归 `lm()` 基础上增加了 `family` 参数，
+首先看下各个特征与股市涨跌之间是否存在关系：
 ```{r}
 f2 <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, data=Smarket, family=binomial)
 summary(f2)
@@ -21,27 +48,36 @@ summary(f2)$coef
 summary(f2)$coef[,4]
 ```
 
-Predict response based on predictors:
+所有特征的 *p-value* 都大于 0.05，说明它们与涨跌之间没有显著关系。
+
+对模型使用 `predict()` 函数给出（基于此模型的）预测值，注意参数 `type` 的设置：
 ```{r}
 gprob <- predict(f2, type = 'response')
 gprob[1:10]
 contrasts(Smarket$Direction)
 ```
 
-Generate confusion matrix:
+根据预测概率，大于 0.5 的为涨，否则为跌，与实际结果比较：
 ```{r}
 gpred <- rep('Down', 1250)
 gpred[gprob > 0.5] <- 'Up'
 table(gpred, Smarket$Direction)
 ```
 
-Calculate the training error rate on all training set:
+怎样解读 confusion matrix？
+
+用两种方法计算预测结果的准确率：
 ```{r}
 (145 + 507) / 1250
 mean(gpred == Smarket$Direction)
 ```
 
-Split existing training set to training and test subset:
+结果一致。
+
+逻辑回归的训练准确率 52%，测试准确率只能更低，
+只要知道股市大趋势，单边押注，都会比这个准确率高得多，这是很多“股神”的套路。
+
+为了研究测试错误率与训练错误率的关系，将数据集分为训练和测试两部分：
 ```{r}
 train <- (Smarket$Year < 2005)
 sm2005 <- Smarket[!train,]
@@ -49,23 +85,27 @@ dim(sm2005)
 direction2005 <- sm2005$Direction
 ```
 
-Build a logistic regression model on training set:
+这里 `train` 是一个布尔向量。
+
+在 2005 年前的数据上创建逻辑回归模型：
 ```{r}
 f2.2 <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, 
             data=Smarket, family=binomial, subset = train)
 ```
 
-With above model, predict response on test set, and calculating test error rate:
+基于此模型给出测试集上的预测结果：
 ```{r}
 gprob2005 <- predict(f2.2, sm2005, type = 'response')
 gpred2005 <- rep('Down', 252)
 gpred2005[gprob2005 > 0.5] <- 'Up'
 table(gpred2005, direction2005)
-# mean(gpred2005 == direction2005)
 mean(gpred2005 != direction2005)
 ```
 
-Predict again with removing irrelevant predictors:
+错误率确实上升了，而且超过了 50%，还不错随便猜。
+
+如果去掉不相关的特征，只用相关性比较强的特征预测是否能得到比较好的模型？
+动手尝试一下：
 ```{r}
 f2.p2 <- glm(Direction ~ Lag1 + Lag2, data=Smarket, family = binomial, subset=train)
 gprob2005.p2 <- predict(f2.p2, sm2005, type="response")
@@ -75,38 +115,68 @@ table(gpred2005.p2, direction2005)
 mean(gpred2005.p2 == direction2005)
 ```
 
-Predict the returns associated with particular values of *Lag1* and *Lag2*:
+正确率上升到了 58%，说明假设是正确的。
+
+给定 *Lag1* 和 *Lag2* 的值，基于现有模型预测涨跌：
 ```{r}
 predict(f2.p2, newdata = data.frame(Lag1 = c(1.2, 1.5), Lag2 = c(1.1, -0.8)), type = 'response')
 ```
 
+在这两个组合下，模型都给出了（不明显的）下跌预期。
+
 # 4.6.3 Linear Discriminant Analysis
+
+对股票数据拟合 LDA 模型：
 ```{r}
 library(MASS)
-ldaf <- lda(Direction ~ Lag1 + Lag2, data = Smarket, subset = train)
-ldaf
-plot(ldaf)
+lda_fit <- lda(Direction ~ Lag1 + Lag2, data = Smarket, subset = train)
+lda_fit
+plot(lda_fit)
 ```
 
-How to read this plot?
-The y-axis is the probability of *Down* and *Up*.
-What does the x-axis stand for?
+先验概率：Down $\hat\pi_1 = 0.492$ 和 Up $\hat\pi_2 = 0.508$ 是怎样计算出来的？
 
+*Group means*: 各分组内各个特征平均值 $\mu_k$（见式 4.15）。
+
+对于 LDA 计算出来各特征的系数，与 $X$ 组合后结果越大，*Up* 的概率越高：
+$$
+-0.642 \times \text{Lag1} - 0.514 \times \text{Lag2}
+$$
+
+将每个观测的 *Lag1*, *Lag2* 代入上式，就得到了此观测的 *linear discriminants* (p162)，
+这个值越大，*Up* 的概率越高，否则 *Down* 的概率高。
+下面的图是表征各组（这里是 *Up* 和 *Down*）中 linear discriminant 分布情况的 histogram 图。
+
+用 LDA 模型预测股市变化：
 ```{r}
-lda.pred <- predict(ldaf, sm2005)
+lda.pred <- predict(lda_fit, sm2005)
+lda.pred
 names(lda.pred)
+summary(lda.pred$x)
+summary(lda.pred$class)
+summary(lda.pred$posterior)
+```
+
+计算预测正确率：
+```{r}
 lda.class <- lda.pred$class
 table(lda.class, direction2005)
 mean(lda.class == direction2005)
+```
+
+预测结果取决于一个观测在两个分组中，哪个概率更大些：
+```{r}
 sum(lda.pred$posterior[,1] > 0.5)
 sum(lda.pred$posterior[,1] < 0.5)
-lda.pred$posterior[1:20,1]
 lda.class[1:20]
-sum(lda.pred$posterior[,1] > 0.9)
+lda.pred$posterior[1:20,]
 ```
+
+第12和18个观测 Down 的概率大于 Up 概率，所以被标记为 *Down*。
 
 # 4.6.4 Quadratic Discriminant Analysis
 
+用 QDA 模型拟合股票市场数据：
 ```{r}
 qdaf <- qda(Direction ~ Lag1 + Lag2, data = Smarket, subset = train)
 qdaf
@@ -138,6 +208,9 @@ knn.pred3 <- knn(train.X, test.X, train.direction, k = 3)
 table(knn.pred3, direction2005)
 mean(knn.pred3 == direction2005)
 ```
+
+$k$ 从 1 到 3，正确率小幅上升，继续增大 $k$ 不会进一步提升正确率，
+所以 QDA 是目前效果最好的分类方法。
 
 # 4.6.6 An Application to Caravan Insurance Data
 
