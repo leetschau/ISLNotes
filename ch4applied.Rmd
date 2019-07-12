@@ -234,7 +234,7 @@ Predict on the 1st group predictors with KNN (k = 5):
 ktrain1 <- boston13[isTraining, c('zn', 'indus', 'chas', 'nox')]
 ktest1 <- boston13[-isTraining, c('zn', 'indus', 'chas', 'nox')]
 ktrain.result <- boston13$crime.rate[isTraining]
-kmod1 <- knn(ktrain1, ktest1, ktrain.result1, k = 5)
+kmod1 <- knn(ktrain1, ktest1, ktrain.result, k = 5)
 mean(kmod1 == boston13$crime.rate[-isTraining])
 ```
 

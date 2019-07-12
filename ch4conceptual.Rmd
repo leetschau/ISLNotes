@@ -62,7 +62,7 @@ The length of each side for $p$ dimensional hypercube is $0.1^{\frac1p}$.
 
 # Question 5
 
-5a: When the Bayes decision boundary is linear, QDA performs better than QDA on training set.
+5a: When the Bayes decision boundary is linear, QDA performs better than LDA on training set.
 LDA performs better than QDA on test set.
 
 5b: When the Bayes boundary is non-linear, QDA performs better than LDA on both training and test sets.
