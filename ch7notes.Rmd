@@ -1,0 +1,65 @@
+---
+title: "ISL 第7章笔记"
+output: html_notebook
+---
+
+# 7.2 Step Functions
+
+For equation (7.4), note that the $X$ is a column vector (`dim(X) = c(n, 1)` ) , because in section 7.1 ~ 7.6 there is only 1 predictor, which means $p = 1$.
+
+# 7.4 Regression Splines
+
+> Since each polynomial has four parameters, we are using a total of eight degrees of freedom in fitting this piecewise polynomial model.
+
+有助于理解什么是自由度。
+
+> The general definition of a degree-d spline is that it is a piecewise  degree-d polynomial, with continuity in derivatives up to degree $d − 1$ at  each knot.
+
+概念定义：
+
+* 自由度为 $d$ 的样条曲线 (spline):  在节点处 $d-1$ 阶导数连续。例如272页最后一段表明一个3阶 spline (cubic spline) 的1阶、2阶导数 在节点处 都要连续。
+
+* cubic spline: 3阶样条曲线，在节点处保证1阶和2阶导数连续的 $\beta(x)$；
+
+* natural spline: 有边界约束的spline，也就是在 $X$ 小于最小的节点和大于最大的节点时，$\beta(x)$ 必须是线性的。
+
+# 7.5 Smoothing Splines
+
+光滑曲线方法的计算公式 (7.11) 与 第6章 ridge regression 和 lasso 的思想是类似的，都是在 training RSS 的基础上增加一个带调节参数 $\lambda$ 的 penalty 项，从而避免过拟合。
+区别在于后两者通过控制系数的1阶 (lasso) 和2阶 (ridge) 模总和（书中用“预算” budget 来比喻十分贴切）达到目的，而 smooth spline 通过控制曲线粗糙度 (roughness) 达到目的。
+
+> $\int g''(t)^2dt$ is simply a measure of the total change in the function $g'(t)$ over its entire range.
+
+> The larger the value of λ, the smoother g will be.
+
+下面这句话解释了为什么 natural cubic spline 要求2阶导数连续：
+
+> it is a piecewise cubic polynomial with knots at the unique values of $x_1, \dots, x_n$ and continuous first and second derivatives at each knot.
+
+如果2阶导数不连续，式 (7.11) 的 penalty 部分的 $g''(t)$ 会变为无穷大。
+
+对于式 (7.12)，$\hat g_\lambda$ 不应该是一个长度为 $n$ 的向量吧，$\hat g_i$ 应该是一个三次曲线的系数。
+
+# 7.6 Local Regression
+
+算法 7.1 中，参数 $s$ 越小，拟合越不平滑，相当于上一节式 (7.11) 中 $\lambda$ 越小；
+$s$ 越大，拟合越平滑，相当于 $\lambda$ 越大。
+
+Local regression 不适于特征数量 $p$ 大于3或者4的场景：
+
+> However, local regression can perform poorly if $p$ is much larger than about 3 or 4 because there will generally be very few training observations close to $x_0$.
+
+# 7.7 Generalized Additive Models
+
+前6章介绍了有参数方法，包括线性回归和分类，优点是计算量小，解释性好，缺点是适用范围窄，待解问题必须满足线性和可加性两个要求；第8章介绍无参数方法特征正好相反，本章介绍的非线性回归和分类介于二者之间，只要满足可加性即可，如果不满足，还可以用增加交互项的方法弥补：
+
+> For fully general models, we have to look for even more flexible approaches  such as random forests and boosting, described in Chapter 8. GAMs provide
+a useful compromise between linear and fully nonparametric models.
+
+对比式 (7.17) 和 (7.18) 可知，回归或者分类中，可加性保证响应变量的估计值 $\hat y$ 由各个原始特征观测值 $X_i \,(i \in [1..p])$ 的某种变换相加得到，
+线性与非线性的区别在于变换形式不同：
+
+* 线性变换： 在 $X_i$ 上乘一个实数 $\beta_i$：$\beta_i X_i \,(i \in [1..p]) $；
+
+* 非线性变换：以 $X_i$ 为自变量做某种函数变换：$f_i(X_i) \,(i \in [1..p])$，所以线性回归是 $f_i(X_i) = \beta_i X_i$ 的一种特殊的非线性回归。
+

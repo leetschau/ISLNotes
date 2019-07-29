@@ -142,9 +142,8 @@ lines(age.grid, predict(fit2, data.frame(age = age.grid)), col = 'blue', lwd = 2
 legend('topright', legend = c('Span = 0.2', 'Span = 0.5'), col = c('red', 'blue'), lty = 1, lwd = 2, cex = .8)
 ```
 
-
-
 ## 对 `bs()` 函数的说明
+
 `bs(x, knots = knots, degree = degree, intercept = TRUE, Boundary.knots = range(x))` 返回一个 `length(x)` 行 `length(knots) + degree + 1` 列矩阵，其中 `x` 是一维实数向量，例如 `seq(0, 3, by = 0.01)`（不需要按顺序排列），`knots` 是 处于 `x` 覆盖范围（例如`range(x)` 是 `[0, 3]`）内的一组叫做节点的实数（例如 `c(0.5, 1.7)`），它的每一列是一个样条 (spline) 函数，这组函数由 `range(x)` 和 knots 以及样条函数的次数 degree 唯一确定，每个样条都保证在节点处 `degree - 1` 阶导数连续，下面的代码演示了在 `[0, 3]` 区间上，包含 0.5, 1.7 两个节点的2次样条(由 $ax^2 + bx +c$ 描述)曲线（共5条）：
 ```{r}
 degree <- 2
@@ -158,6 +157,7 @@ for (i in 1 : ncol(ybs)) {
   plot(x, ybs[, i], ylab = 'y', main = paste('bs: deg =', degree, 'i = ', i))
 }
 ```
+
 将 `degree` 改为1可以清晰的看到函数曲线在 0.5 和 1.7 保持了连续，随着 `degree` 的升高，节点处连续的导数升高，视觉效果越来越平滑。
 
 `bs()`函数生成的一组函数叫做 [B-spline Basis Functions](http://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-basis.html)，*basis function* 类似于向量空间中的基底向量，各阶函数的计算公式由 *Cox-de Boor recursion formula* 定义，这个公式的初始状态（0阶：$N_{i,0}(u)$）是节点分隔的各个子区间上的阶梯函数，每升一阶自变量 `u` 的阶次增加1，例如 $N_{i,3}(u)$ 是一个`u`的3次方多项式。
@@ -218,7 +218,6 @@ max(t(ybs) - y) < 1e-10     # demonstrate y and ybs are the same
 ```
 
 为什么 `bs()` 生成的函数组包含`length(knots) + degree + 1` 列，或者说自由度为`length(knots) + degree + 1`？
-
 
 一段 $d$ 阶样条曲线的自由度是 $(d + 1)$: $\beta_0 + \beta_1 x + \dots + \beta_d x^d$，$K$ 个节点将空间分为 $K+1$ 份，总自由度是 $(d+1) \times (K+1)$，同时在每个节点上有 $d$ 个约束（从 0 到 $d-1$ 阶导数相等），最终自由度是总自由度减去总约束数：
 $$
@@ -306,3 +305,5 @@ gam.lr.s <- gam(I(wage > 250) ~ year + s(age, df = 5) + education, family = bino
 plot(gam.lr.s, se = TRUE, col = 'green')
 ```
 
+在 `bs()`, `ns()` 和 `smooth.spline()` 中，只有 `bs()` 可以指定次数 (通过 `degree` 参数)，
+其他两个都是3次样条。
