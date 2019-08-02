@@ -4,7 +4,9 @@ output: html_notebook
 ---
 
 # Question 10
+
 ## 10a
+
 ```{r}
 library(ISLR)
 str(Weekly)
@@ -15,6 +17,7 @@ The *Volume* increased with the *Year*.
 No other patterns are clear enough to be observed.
 
 ## 10b
+
 ```{r}
 lrf <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, data = Weekly, family = 'binomial')
 summary(lrf)
@@ -22,6 +25,7 @@ summary(lrf)
 *Lag2* is statistically significant, with p-value 3%.
 
 ## 10c
+
 ```{r}
 lrp <- predict(lrf, type = 'response')
 lrpred <- rep('Down', length(lrp))
@@ -34,6 +38,7 @@ The overall error rate: $(48 + 430) \div (54 + 48 + 430 + 557) = 0.439$
 Logistic regression predict correctly most of time when *direction* is "Up": $557 \div (557 + 48)$, wrongly most of time when it's "Down": $54 \div (54 + 430)$.
 
 ## 10d
+
 ```{r}
 isTest <- Weekly$Year > 2008
 training <- Weekly[!isTest, ]
@@ -47,6 +52,7 @@ mean(res10d == testing$Direction)
 ```
 
 ## 10e
+
 ```{r}
 library(MASS)
 f10e <- lda(Direction ~ Lag2, data = training)
@@ -56,6 +62,7 @@ mean(pred10e$class == testing$Direction)
 ```
 
 ## 10f
+
 ```{r}
 f10f <- qda(Direction ~ Lag2, data = training)
 pred10f <- predict(f10f, testing)
@@ -64,6 +71,7 @@ mean(pred10f$class == testing$Direction)
 ```
 
 ## 10g
+
 ```{r}
 library(class)
 set.seed(1)
@@ -71,13 +79,60 @@ f10g <- knn(as.matrix(training$Lag2), as.matrix(testing$Lag2), training$Directio
 table(f10g, testing$Direction)
 mean(f10g == testing$Direction)
 ```
+
 Notice the first 2 parameters of `knn()` function must be data frame or matrix.
+
+对本章第8题的验证：
+KNN 算法在 $K=1$ 时的训练正确率是否为 100%？
+```{r}
+library(tidyverse)
+set.seed(1)
+training <- Weekly[!isTest, ]
+mk1 <- knn(as.matrix(training$Lag2), as.matrix(training$Lag2), training$Direction, k = 1)
+table(mk1, training$Direction)
+mean(mk1 == training$Direction)
+```
+
+正确率居然不是 100%？
+
+为什么会有41个点的 *Direction* 值与自己不同？
+让我们先把它们找出来：
+```{r}
+outliers <- which(mk1 != training$Direction)
+length(outliers)
+outliers[1:2]
+```
+
+异常点共有41个，与上面 `table()` 的输出 22 + 19 一致。
+下面分析一下这些异常点和正常点有什么不一样。
+
+首先取前两个异常点（下标分别为12和108）作为分析对象，
+取它们后面的值作为对比，观察它们各自在半径0.01范围内的邻居：
+```{r}
+t1 <- 12
+t2 <- 108
+eps <- 0.01
+filter(training, Lag2 > training$Lag2[t1] - eps & Lag2 < training$Lag2[t1] + eps)
+filter(training, Lag2 > training$Lag2[t1 + 1] - eps & Lag2 < training$Lag2[t1 + 1] + eps)
+filter(training, Lag2 > training$Lag2[t2] - eps & Lag2 < training$Lag2[t2] + eps)
+filter(training, Lag2 > training$Lag2[t2 + 1] - eps & Lag2 < training$Lag2[t2 + 1] + eps)
+```
+
+不难看出，这些点之所以与“自己”的 *Direction* 取值不同，是因为有一个或多个相同值的点存在导致的。
+
+最后回答第8题引出的问题：
+
+* 当数据集里没有重叠点时，$K=1$的 `knn` 在自身训练集上的正确率是 100%，
+
+* 如果数据集里有重叠点，是否出出现异常点取决于重叠点的标记（这里是 *Direction*）取值是否一致，
+异常点越多，正确率越低。
 
 ## 10h
 
 Logistic Regression in (d) and LDA method in (e) provide the best result (correct rate: 62.5%) on this data.
 
 # Question 11
+
 ## 11a
 ```{r}
 auto11 <- Auto
