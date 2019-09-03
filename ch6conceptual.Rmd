@@ -13,7 +13,7 @@ i: True; ii: True; iii: False; iv: False; v: False.
 
 # Question 2
 
-(a): iii is true. Lasso is more flexible than least squares (see first paragraph of section 6.4.3 on page 241). So its variance decreases compared with least squares. Although the bias increases at the same time, the increase is less than the decrease of variance. So the overall test RSS decreases.
+(a): iii is true. Lasso is less flexible than least squares (see first paragraph of section 6.4.3 on page 241). So its variance decreases compared with least squares. Although the bias increases at the same time, the increase is less than the decrease of variance. So the overall test RSS decreases.
 
 (b): iii is true. The same reason of lasso.
 
