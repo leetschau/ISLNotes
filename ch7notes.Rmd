@@ -13,20 +13,27 @@ For equation (7.4), note that the $X$ is a column vector (`dim(X) = c(n, 1)` ) ,
 
 有助于理解什么是自由度。
 
-> The general definition of a degree-d spline is that it is a piecewise  degree-d polynomial, with continuity in derivatives up to degree $d − 1$ at  each knot.
+> The general definition of a degree-*d* spline is that it is a piecewise degree-*d* polynomial,
+> with continuity in derivatives up to degree $d − 1$ at each knot.
 
 概念定义：
 
-* 自由度为 $d$ 的样条曲线 (spline):  在节点处 $d-1$ 阶导数连续。例如272页最后一段表明一个3阶 spline (cubic spline) 的1阶、2阶导数 在节点处 都要连续。
+* 自由度为 $d$ 的样条曲线 (spline):  在节点处 $d-1$ 阶导数连续。
+  例如272页最后一段表明一个3阶 spline (cubic spline) 的1阶、2阶导数 在节点处 都要连续。
 
 * cubic spline: 3阶样条曲线，在节点处保证1阶和2阶导数连续的 $\beta(x)$；
 
-* natural spline: 有边界约束的spline，也就是在 $X$ 小于最小的节点和大于最大的节点时，$\beta(x)$ 必须是线性的。
+* natural spline: 有边界约束的spline，也就是在 $X$ 小于最小的节点和大于最大的节点时，
+  $\beta(x)$ 必须是线性的。
+
+样条曲线的节点的数量和位置通过交叉验证确定。
 
 # 7.5 Smoothing Splines
 
-光滑曲线方法的计算公式 (7.11) 与 第6章 ridge regression 和 lasso 的思想是类似的，都是在 training RSS 的基础上增加一个带调节参数 $\lambda$ 的 penalty 项，从而避免过拟合。
-区别在于后两者通过控制系数的1阶 (lasso) 和2阶 (ridge) 模总和（书中用“预算” budget 来比喻十分贴切）达到目的，而 smooth spline 通过控制曲线粗糙度 (roughness) 达到目的。
+光滑曲线方法的计算公式 (7.11) 与 第6章 ridge regression 和 lasso 的思想是类似的，
+都是在 training RSS 的基础上增加一个带调节参数 $\lambda$ 的 penalty 项，从而避免过拟合。
+区别在于后两者通过控制系数的1阶 (lasso) 和2阶 (ridge) 模总和（书中用“预算” budget 来比喻十分贴切）
+达到目的，而 smooth spline 通过控制曲线粗糙度 (roughness) 达到目的。
 
 > $\int g''(t)^2dt$ is simply a measure of the total change in the function $g'(t)$ over its entire range.
 
@@ -38,7 +45,19 @@ For equation (7.4), note that the $X$ is a column vector (`dim(X) = c(n, 1)` ) ,
 
 如果2阶导数不连续，式 (7.11) 的 penalty 部分的 $g''(t)$ 会变为无穷大。
 
-对于式 (7.12)，$\hat g_\lambda$ 不应该是一个长度为 $n$ 的向量吧，$\hat g_i$ 应该是一个三次曲线的系数。
+> In other words, *the function g(x) that minimizes (7.11) is a natural cubic spline with knots
+> at* $x_1, \cdots, x_n$!. However, it is not the same natural cubic spline that one would get
+> if one applied the basis function approach decribed in Section 7.4.3 with knots
+> at $x_1, \cdots, x_n$ -- rather, it is a *shrunken* version of such a natural cubic spline,
+> where the value of the tuning parameter $\lambda$ in (7.11) controls the level of shrunkage.
+
+所以平滑样条 smooth spline 是 shrunken 版本的自然样条 natrual spline
+（类似于 ridge/lasso regression 是 shrunken 版本的最小二乘回归），
+而自然样条是边界线性的 cubic spline，
+cubic spline 是有多个节点且节点处平滑的多项式曲线（见上面 7.4 节笔记）。
+
+对于式 (7.12)，$\hat g_\lambda$ 不应该是一个长度为 $n$ 的向量吧，
+$\hat g_i$ 应该是一个三次曲线的系数。
 
 # 7.6 Local Regression
 
